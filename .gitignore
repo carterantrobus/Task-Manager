@@ -1,0 +1,17 @@
+.aws/
+*.pem
+*.ppk
+*.key
+*.crt
+
+*.tfstate
+*.tfstate.backup
+
+__pycache__/
+*.pyc
+
+.env
+.env.*
+
+*.log
+nohup.out
