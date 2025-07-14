@@ -1,21 +1,101 @@
 import os
 import sys
 import pytest
+import json
 
 # Added the project root to the module search path so app.py is importable
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))) 
 
 from backend.app import app
+from backend.models import db, User, Task
 
 @pytest.fixture
 def client():
     app.config["TESTING"] = True
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    
     with app.test_client() as client:
-        yield client
+        with app.app_context():
+            db.create_all()
+            yield client
+            db.drop_all()
 
-# Test: successful task addition
-def test_add_tasks(client):
-    response = client.post("/tasks", json={"task": "Test Task"})
+@pytest.fixture
+def auth_headers(client):
+    """Create a test user and return authentication headers"""
+    # Register a test user
+    response = client.post("/auth/register", json={
+        "username": "testuser",
+        "email": "test@example.com",
+        "password": "testpass123"
+    })
+    assert response.status_code == 201
+    data = response.get_json()
+    token = data["access_token"]
+    
+    return {"Authorization": f"Bearer {token}"}
+
+# Authentication tests
+def test_register_user(client):
+    response = client.post("/auth/register", json={
+        "username": "newuser",
+        "email": "new@example.com",
+        "password": "password123"
+    })
+    assert response.status_code == 201
+    data = response.get_json()
+    assert "access_token" in data
+    assert data["user"]["username"] == "newuser"
+    assert data["user"]["email"] == "new@example.com"
+
+def test_register_duplicate_username(client):
+    # Register first user
+    response = client.post("/auth/register", json={
+        "username": "testuser",
+        "email": "test1@example.com",
+        "password": "password123"
+    })
+    assert response.status_code == 201
+    
+    # Try to register with same username
+    response = client.post("/auth/register", json={
+        "username": "testuser",
+        "email": "test2@example.com",
+        "password": "password123"
+    })
+    assert response.status_code == 400
+    assert "Username already exists" in response.get_json()["error"]
+
+def test_login_user(client):
+    # Register a user first
+    response = client.post("/auth/register", json={
+        "username": "loginuser",
+        "email": "login@example.com",
+        "password": "password123"
+    })
+    assert response.status_code == 201
+    
+    # Login with the user
+    response = client.post("/auth/login", json={
+        "username": "loginuser",
+        "password": "password123"
+    })
+    assert response.status_code == 200
+    data = response.get_json()
+    assert "access_token" in data
+    assert data["user"]["username"] == "loginuser"
+
+def test_login_invalid_credentials(client):
+    response = client.post("/auth/login", json={
+        "username": "nonexistent",
+        "password": "wrongpass"
+    })
+    assert response.status_code == 401
+    assert "Invalid username or password" in response.get_json()["error"]
+
+# Task tests (now require authentication)
+def test_add_tasks(client, auth_headers):
+    response = client.post("/tasks", json={"task": "Test Task"}, headers=auth_headers)
     assert response.status_code == 201
     data = response.get_json()
     assert data["task"] == "Test Task"
@@ -23,57 +103,50 @@ def test_add_tasks(client):
     assert "id" in data
     assert data["completed"] == False
 
-# Task: get tasks (list format)
-def test_get_tasks(client):
-    response = client.get("/tasks")
+def test_get_tasks(client, auth_headers):
+    response = client.get("/tasks", headers=auth_headers)
     assert response.status_code == 200
     data = response.get_json()
     assert isinstance(data, list)
 
-# Test: empty string input
-def test_add_empty_task(client):
-    response = client.post("/tasks", json={"task": ""})
+def test_add_empty_task(client, auth_headers):
+    response = client.post("/tasks", json={"task": ""}, headers=auth_headers)
     assert response.status_code == 400
     assert response.get_json()["error"] == "Task cannot be empty"
 
-# Test: missing 'task' key
-def test_add_missing_task_key(client):
-    response = client.post("/tasks", json={"not_task": "oops"})
+def test_add_missing_task_key(client, auth_headers):
+    response = client.post("/tasks", json={"not_task": "oops"}, headers=auth_headers)
     assert response.status_code == 400
     assert "error" in response.get_json()
 
-# Test: invalid JSON payload
-def test_add_invalid_json(client):
-    response = client.post("/tasks", data="notjson", content_type="application/json")
+def test_add_invalid_json(client, auth_headers):
+    response = client.post("/tasks", data="notjson", content_type="application/json", headers=auth_headers)
     assert response.status_code in [400, 415]
 
-# Test: successful task deletion
-def test_delete_task(client):
+def test_delete_task(client, auth_headers):
     # First add a task
-    response = client.post("/tasks", json={"task": "Task to delete"})
+    response = client.post("/tasks", json={"task": "Task to delete"}, headers=auth_headers)
     assert response.status_code == 201
     task_id = response.get_json()["id"]
     
     # Then delete it
-    response = client.delete(f"/tasks/{task_id}")
+    response = client.delete(f"/tasks/{task_id}", headers=auth_headers)
     assert response.status_code == 200
     assert response.get_json()["message"] == "Task Deleted"
     
     # Verify it's gone
-    response = client.get("/tasks")
+    response = client.get("/tasks", headers=auth_headers)
     tasks = response.get_json()
     assert not any(task["id"] == task_id for task in tasks)
 
-# Test: delete non-existent task
-def test_delete_nonexistent_task(client):
-    response = client.delete("/tasks/nonexistent-id")
+def test_delete_nonexistent_task(client, auth_headers):
+    response = client.delete("/tasks/nonexistent-id", headers=auth_headers)
     assert response.status_code == 404
     assert response.get_json()["error"] == "Task not found"
 
-# Test: successful task update
-def test_update_task(client):
+def test_update_task(client, auth_headers):
     # First add a task
-    response = client.post("/tasks", json={"task": "Original task", "priority": "low"})
+    response = client.post("/tasks", json={"task": "Original task", "priority": "low"}, headers=auth_headers)
     assert response.status_code == 201
     task_id = response.get_json()["id"]
     
@@ -83,7 +156,7 @@ def test_update_task(client):
         "priority": "high",
         "completed": True
     }
-    response = client.put(f"/tasks/{task_id}", json=update_data)
+    response = client.put(f"/tasks/{task_id}", json=update_data, headers=auth_headers)
     assert response.status_code == 200
     
     updated_task = response.get_json()
@@ -92,58 +165,84 @@ def test_update_task(client):
     assert updated_task["completed"] == True
     assert updated_task["id"] == task_id
 
-# Test: update non-existent task
-def test_update_nonexistent_task(client):
-    response = client.put("/tasks/nonexistent-id", json={"task": "Updated"})
+def test_update_nonexistent_task(client, auth_headers):
+    response = client.put("/tasks/nonexistent-id", json={"task": "Updated"}, headers=auth_headers)
     assert response.status_code == 404
     assert response.get_json()["error"] == "Task not found"
 
-# Test: update task with empty text
-def test_update_task_empty_text(client):
+def test_update_task_empty_text(client, auth_headers):
     # First add a task
-    response = client.post("/tasks", json={"task": "Original task"})
+    response = client.post("/tasks", json={"task": "Original task"}, headers=auth_headers)
     assert response.status_code == 201
     task_id = response.get_json()["id"]
     
     # Try to update with empty task
-    response = client.put(f"/tasks/{task_id}", json={"task": ""})
+    response = client.put(f"/tasks/{task_id}", json={"task": ""}, headers=auth_headers)
     assert response.status_code == 400
     assert response.get_json()["error"] == "Task cannot be empty"
 
-# Test: update task with invalid priority
-def test_update_task_invalid_priority(client):
+def test_update_task_invalid_priority(client, auth_headers):
     # First add a task
-    response = client.post("/tasks", json={"task": "Original task"})
+    response = client.post("/tasks", json={"task": "Original task"}, headers=auth_headers)
     assert response.status_code == 201
     task_id = response.get_json()["id"]
     
     # Try to update with invalid priority
-    response = client.put(f"/tasks/{task_id}", json={"priority": "invalid"})
+    response = client.put(f"/tasks/{task_id}", json={"priority": "invalid"}, headers=auth_headers)
     assert response.status_code == 400
     assert response.get_json()["error"] == "Invalid priority level"
 
-# Test: update task with invalid JSON
-def test_update_task_invalid_json(client):
+def test_update_task_invalid_json(client, auth_headers):
     # First add a task
-    response = client.post("/tasks", json={"task": "Original task"})
+    response = client.post("/tasks", json={"task": "Original task"}, headers=auth_headers)
     assert response.status_code == 201
     task_id = response.get_json()["id"]
     
     # Try to update with invalid JSON
-    response = client.put(f"/tasks/{task_id}", data="notjson", content_type="application/json")
+    response = client.put(f"/tasks/{task_id}", data="notjson", content_type="application/json", headers=auth_headers)
     assert response.status_code == 400
     assert response.get_json()["error"] == "Invalid JSON"
 
-# Test: add task with custom priority
-def test_add_task_with_priority(client):
-    response = client.post("/tasks", json={"task": "High priority task", "priority": "high"})
+def test_add_task_with_priority(client, auth_headers):
+    response = client.post("/tasks", json={"task": "High priority task", "priority": "high"}, headers=auth_headers)
     assert response.status_code == 201
     data = response.get_json()
     assert data["task"] == "High priority task"
     assert data["priority"] == "high"
 
-# Test: add task with invalid priority
-def test_add_task_invalid_priority(client):
-    response = client.post("/tasks", json={"task": "Task", "priority": "invalid"})
+def test_add_task_invalid_priority(client, auth_headers):
+    response = client.post("/tasks", json={"task": "Task", "priority": "invalid"}, headers=auth_headers)
     assert response.status_code == 400
     assert response.get_json()["error"] == "Invalid priority level"
+
+def test_add_task_with_status_and_due_date(client, auth_headers):
+    response = client.post("/tasks", json={"task": "Task with status and due date", "status": "In Progress", "dueDate": "2024-06-01T12:00:00Z"}, headers=auth_headers)
+    assert response.status_code == 201
+    data = response.get_json()
+    assert data["task"] == "Task with status and due date"
+    assert data["status"] == "In Progress"
+    assert data["dueDate"] == "2024-06-01T12:00:00Z"
+
+def test_update_task_status_and_due_date(client, auth_headers):
+    response = client.post("/tasks", json={"task": "Task to update status and due date"}, headers=auth_headers)
+    assert response.status_code == 201
+    task_id = response.get_json()["id"]
+
+    update_data = {
+        "status": "Done",
+        "dueDate": "2024-07-01T09:00:00Z"
+    }
+    response = client.put(f"/tasks/{task_id}", json=update_data, headers=auth_headers)
+    assert response.status_code == 200
+    updated_task = response.get_json()
+    assert updated_task["status"] == "Done"
+    assert updated_task["dueDate"] == "2024-07-01T09:00:00Z"
+
+# Test unauthorized access
+def test_unauthorized_access(client):
+    response = client.get("/tasks")
+    assert response.status_code == 401
+
+def test_unauthorized_add_task(client):
+    response = client.post("/tasks", json={"task": "Test Task"})
+    assert response.status_code == 401
