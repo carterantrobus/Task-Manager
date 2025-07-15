@@ -1,9 +1,6 @@
 import os
-print(open('.env').read())
 from dotenv import load_dotenv
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
-print(os.environ.get('SMTP_HOST'))
-print(os.environ.get('SMTP_USER'))
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -17,7 +14,8 @@ from models import PasswordResetToken
 app = Flask(__name__)
 
 # Configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tasks.db'
+# Use PostgreSQL if POSTGRES_URI is set, otherwise fallback to SQLite (for dev/testing)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('POSTGRES_URI', 'sqlite:///tasks.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'your-secret-key-change-in-production')
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
