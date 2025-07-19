@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { MONSTERS, DEFAULT_THEME, getMonsterById, getNextMonster, getThemeUnlockMonsters } from '../monsterData';
+import { MONSTERS, DEFAULT_THEME, getMonsterById, getNextMonster } from '../monsterData';
 import { useAuth } from '../contexts/AuthContext';
 
-const API_URL = "http://monstager.netlify.app/tasks";
+const API_URL = "https://monstager.xyz/tasks";
 const LOCAL_TASKS_KEY = 'stm_tasks';
 const LOCAL_PENDING_KEY = 'stm_pending';
 
@@ -85,7 +85,7 @@ export default function TaskApp() {
         setTimeout(() => playSound(1047, 0.2), 300); // C (high)
     };
 
-    const fetchTasks = async () => {
+    const fetchTasks = useCallback(async () => {
         setLoading(true);
         try {
             const res = await fetch(API_URL, {
@@ -100,7 +100,7 @@ export default function TaskApp() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [getAuthHeaders]);
 
     const addTask = async (e) => {
         e.preventDefault();
@@ -172,27 +172,7 @@ export default function TaskApp() {
         }
     };
 
-    const toggleComplete = async (id) => {
-        const task = tasks.find(t => t.id === id);
-        if (!task) return;
 
-        try {
-            const res = await fetch(`${API_URL}/${id}`, {
-                method: "PUT",
-                headers: getAuthHeaders(),
-                body: JSON.stringify({
-                    ...task,
-                    completed: !task.completed
-                })
-            });
-            if (!res.ok) throw new Error("Failed to update task");
-            const updatedTask = await res.json();
-            setTasks(tasks.map(t => t.id === id ? updatedTask : t));
-            setError("");
-        } catch (err) {
-            setError("Failed to update task. Please try again.");
-        }
-    };
 
     const handleEdit = (id) => {
         setEditingTaskId(id);
@@ -272,13 +252,13 @@ export default function TaskApp() {
 
     useEffect(() => {
         fetchTasks();
-    }, []);
+    }, [fetchTasks]);
 
     // Sync pending changes when back online
     useEffect(() => {
         window.addEventListener('online', syncPending);
         return () => window.removeEventListener('online', syncPending);
-    }, [tasks]);
+    }, [syncPending]);
 
     // On mount, load from localStorage if offline
     useEffect(() => {
@@ -302,7 +282,7 @@ export default function TaskApp() {
     }
 
     // Sync pending changes to backend
-    async function syncPending() {
+    const syncPending = useCallback(async () => {
         if (!navigator.onLine) return;
         const pending = getPending();
         if (pending.length === 0) return;
@@ -328,7 +308,7 @@ export default function TaskApp() {
         }
         localStorage.removeItem(LOCAL_PENDING_KEY);
         fetchTasks();
-    }
+    }, [fetchTasks]);
 
     // Load monster progress and themes from localStorage
     useEffect(() => {

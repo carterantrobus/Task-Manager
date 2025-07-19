@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const AuthContext = createContext();
 
@@ -15,7 +15,7 @@ export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState(localStorage.getItem('auth_token'));
     const [loading, setLoading] = useState(true);
 
-    const API_URL = "http://monstager.netlify.app";
+    const API_URL = "https://monstager.xyz";
 
     useEffect(() => {
         // Check if user is logged in on app start
@@ -24,9 +24,9 @@ export const AuthProvider = ({ children }) => {
         } else {
             setLoading(false);
         }
-    }, []);
+    }, [token, fetchUserProfile]);
 
-    const fetchUserProfile = async () => {
+    const fetchUserProfile = useCallback(async () => {
         try {
             const response = await fetch(`${API_URL}/auth/profile`, {
                 headers: {
@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [token]);
 
     const login = async (identifier, password) => {
         try {

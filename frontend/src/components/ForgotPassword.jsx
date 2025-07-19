@@ -12,7 +12,7 @@ export default function ForgotPassword() {
         setMessage('');
         setLoading(true);
         try {
-            const res = await fetch('http://monstager.netlify.app/auth/request-password-reset', {
+            const res = await fetch('https://monstager.xyz/auth/request-password-reset', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email })
