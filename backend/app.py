@@ -265,4 +265,5 @@ def manage_task(task_id):
 
 # Only runs if this file is executed directly
 if __name__ == '__main__':
+    print(f"Starting Flask app on host=0.0.0.0, port=5000")
     app.run(host='0.0.0.0', port=5000)

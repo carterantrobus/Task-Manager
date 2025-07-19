@@ -5,7 +5,7 @@ import 'react-calendar/dist/Calendar.css';
 import { MONSTERS, DEFAULT_THEME, getMonsterById, getNextMonster, getThemeUnlockMonsters } from '../monsterData';
 import { useAuth } from '../contexts/AuthContext';
 
-const API_URL = "http://localhost:5000/tasks";
+const API_URL = "http://monstager.netlify.app/tasks";
 const LOCAL_TASKS_KEY = 'stm_tasks';
 const LOCAL_PENDING_KEY = 'stm_pending';
 

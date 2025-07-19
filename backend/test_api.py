@@ -1,7 +1,7 @@
 import requests
 import json
 
-BASE_URL = "http://localhost:5000"
+BASE_URL = "http://15.157.62.21:5000"
 
 def test_register():
     print("Testing user registration...")

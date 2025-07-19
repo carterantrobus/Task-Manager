@@ -24,7 +24,14 @@ class Task(db.Model):
     due_date = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.String(36), db.ForeignKey('user.id'), nullable=False)
-    
+
+    def __init__(self, task, priority, status, due_date, user_id):
+        self.task = task
+        self.priority = priority
+        self.status = status
+        self.due_date = due_date
+        self.user_id = user_id
+
     def to_dict(self):
         return {
             'id': self.id,

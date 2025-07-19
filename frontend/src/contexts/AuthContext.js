@@ -15,7 +15,7 @@ export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState(localStorage.getItem('auth_token'));
     const [loading, setLoading] = useState(true);
 
-    const API_URL = "http://localhost:5000";
+    const API_URL = "http://monstager.netlify.app";
 
     useEffect(() => {
         // Check if user is logged in on app start

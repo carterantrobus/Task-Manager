@@ -33,7 +33,7 @@ export default function ResetPassword() {
     }
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/auth/reset-password', {
+      const res = await fetch('http://monstager.netlify.app/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, password })

@@ -128,7 +128,7 @@ describe('TaskApp Component', () => {
     });
 
     // Verify fetch was called correctly
-    expect(fetch).toHaveBeenCalledWith('http://localhost:5000/tasks', expect.objectContaining({
+    expect(fetch).toHaveBeenCalledWith('http://15.157.62.21:5000/tasks', expect.objectContaining({
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: expect.stringContaining('"task":"New test task"'),
@@ -220,7 +220,7 @@ describe('TaskApp Component', () => {
       expect(screen.getByText('No tasks yet. Add your first task above!')).toBeInTheDocument();
     });
 
-    expect(fetch).toHaveBeenCalledWith('http://localhost:5000/tasks/1', {
+    expect(fetch).toHaveBeenCalledWith('http://15.157.62.21:5000/tasks/1', {
       method: 'DELETE',
     });
   });
@@ -287,7 +287,7 @@ describe('TaskApp Component', () => {
       expect(checkbox).toBeChecked();
     });
 
-    expect(fetch).toHaveBeenCalledWith('http://localhost:5000/tasks/1', {
+    expect(fetch).toHaveBeenCalledWith('http://15.157.62.21:5000/tasks/1', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -394,7 +394,7 @@ describe('TaskApp Component', () => {
     await userEvent.selectOptions(prioritySelect, 'high');
     await userEvent.click(addButton);
 
-    expect(fetch).toHaveBeenCalledWith('http://localhost:5000/tasks', expect.objectContaining({
+    expect(fetch).toHaveBeenCalledWith('http://15.157.62.21:5000/tasks', expect.objectContaining({
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: expect.stringContaining('"task":"High priority task"'),
