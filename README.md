@@ -242,13 +242,10 @@ npm test
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Acknowledgments
+## Attributions
 
-- **React Team** - For the amazing frontend framework
-- **Flask Team** - For the lightweight Python web framework
-- **Tailwind CSS** - For the utility-first CSS framework
-- **Netlify** - For the excellent hosting platform
-- **Let's Encrypt** - For free SSL certificates
-
+### Icons
+- Monster icons created by [Author Name] from [Flaticon](https://www.flaticon.com/) - [License Type]
+- Used under Flaticon's free license with attribution
 
 ---
