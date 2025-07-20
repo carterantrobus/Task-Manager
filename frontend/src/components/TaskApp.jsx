@@ -363,7 +363,7 @@ export default function TaskApp() {
             try {
                 const res = await fetch(`${API_URL}/${id}`, {
                     method: "PUT",
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify({ ...task, completed: true, status: 'Done' })
                 });
                 if (!res.ok) throw new Error("Failed to update task");
