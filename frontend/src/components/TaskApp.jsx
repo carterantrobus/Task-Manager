@@ -5,7 +5,7 @@ import 'react-calendar/dist/Calendar.css';
 import { MONSTERS, DEFAULT_THEME, getMonsterById, getNextMonster } from '../monsterData';
 import { useAuth } from '../contexts/AuthContext';
 
-const API_URL = "https://monstager.xyz/tasks";
+const API_URL = "https://api.monstager.xyz/tasks";
 const LOCAL_TASKS_KEY = 'stm_tasks';
 const LOCAL_PENDING_KEY = 'stm_pending';
 

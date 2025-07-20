@@ -15,7 +15,7 @@ export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState(localStorage.getItem('auth_token'));
     const [loading, setLoading] = useState(true);
 
-    const API_URL = "https://monstager.xyz";
+    const API_URL = "https://api.monstager.xyz";
 
     const fetchUserProfile = useCallback(async () => {
         try {
