@@ -202,7 +202,7 @@ A full-stack, gamified task management application built with React and Flask, f
 - **Input Validation** - Server-side data validation
 - **SQL Injection Protection** - ORM-based queries
 
-## 📱 Offline Support
+## Offline Support
 
 The application works offline with the following features:
 - **Local Storage** - Tasks cached in browser
