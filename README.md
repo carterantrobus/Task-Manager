@@ -1,4 +1,4 @@
-# Scalable Task Manager
+# Task Manager (Monstager for short)
 
 A full-stack, gamified task management application built with React and Flask, featuring user authentication, offline support, and monster battle mechanics. Deployed with HTTPS, custom domains, and production-grade infrastructure.
 
