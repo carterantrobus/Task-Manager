@@ -250,29 +250,6 @@ export default function TaskApp() {
             task.task.toLowerCase().includes(searchTerm.toLowerCase())
         );
 
-    useEffect(() => {
-        fetchTasks();
-    }, [fetchTasks]);
-
-    // Sync pending changes when back online
-    useEffect(() => {
-        window.addEventListener('online', syncPending);
-        return () => window.removeEventListener('online', syncPending);
-    }, [syncPending]);
-
-    // On mount, load from localStorage if offline
-    useEffect(() => {
-        if (!navigator.onLine) {
-            const cached = localStorage.getItem(LOCAL_TASKS_KEY);
-            if (cached) setTasks(JSON.parse(cached));
-        }
-    }, []);
-
-    // Save tasks to localStorage on every change
-    useEffect(() => {
-        localStorage.setItem(LOCAL_TASKS_KEY, JSON.stringify(tasks));
-    }, [tasks]);
-
     // Save pending changes to localStorage
     function savePending(pending) {
         localStorage.setItem(LOCAL_PENDING_KEY, JSON.stringify(pending));
@@ -309,6 +286,29 @@ export default function TaskApp() {
         localStorage.removeItem(LOCAL_PENDING_KEY);
         fetchTasks();
     }, [fetchTasks]);
+
+    useEffect(() => {
+        fetchTasks();
+    }, [fetchTasks]);
+
+    // Sync pending changes when back online
+    useEffect(() => {
+        window.addEventListener('online', syncPending);
+        return () => window.removeEventListener('online', syncPending);
+    }, [syncPending]);
+
+    // On mount, load from localStorage if offline
+    useEffect(() => {
+        if (!navigator.onLine) {
+            const cached = localStorage.getItem(LOCAL_TASKS_KEY);
+            if (cached) setTasks(JSON.parse(cached));
+        }
+    }, []);
+
+    // Save tasks to localStorage on every change
+    useEffect(() => {
+        localStorage.setItem(LOCAL_TASKS_KEY, JSON.stringify(tasks));
+    }, [tasks]);
 
     // Load monster progress and themes from localStorage
     useEffect(() => {

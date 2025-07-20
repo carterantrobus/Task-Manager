@@ -17,15 +17,6 @@ export const AuthProvider = ({ children }) => {
 
     const API_URL = "https://monstager.xyz";
 
-    useEffect(() => {
-        // Check if user is logged in on app start
-        if (token) {
-            fetchUserProfile();
-        } else {
-            setLoading(false);
-        }
-    }, [token, fetchUserProfile]);
-
     const fetchUserProfile = useCallback(async () => {
         try {
             const response = await fetch(`${API_URL}/auth/profile`, {
@@ -48,6 +39,15 @@ export const AuthProvider = ({ children }) => {
             setLoading(false);
         }
     }, [token]);
+
+    useEffect(() => {
+        // Check if user is logged in on app start
+        if (token) {
+            fetchUserProfile();
+        } else {
+            setLoading(false);
+        }
+    }, [token, fetchUserProfile]);
 
     const login = async (identifier, password) => {
         try {
