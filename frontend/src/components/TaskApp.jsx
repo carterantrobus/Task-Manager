@@ -620,47 +620,6 @@ export default function TaskApp() {
     const bgClass = `${theme.bg}`;
     const textClass = theme.text || '';
 
-    // Theme-aware button colors
-    const getThemeColors = () => {
-        if (currentTheme === -1) {
-            return {
-                primary: 'blue',
-                bg: 'bg-blue-300',
-                hover: 'hover:bg-blue-200',
-                active: 'bg-white text-blue-600',
-                text: 'text-white'
-            };
-        }
-        const monsterTheme = getMonsterById(currentTheme);
-        if (!monsterTheme?.theme) return {
-            primary: 'blue',
-            bg: 'bg-blue-300',
-            hover: 'hover:bg-blue-200',
-            active: 'bg-white text-blue-600',
-            text: 'text-white'
-        };
-        
-        // Extract color from header gradient
-        const headerClass = monsterTheme.theme.header;
-        if (headerClass.includes('green')) return { primary: 'green', bg: 'bg-green-300', hover: 'hover:bg-green-200', active: 'bg-white text-green-600', text: 'text-white' };
-        if (headerClass.includes('red')) return { primary: 'red', bg: 'bg-red-300', hover: 'hover:bg-red-200', active: 'bg-white text-red-600', text: 'text-white' };
-        if (headerClass.includes('purple')) return { primary: 'purple', bg: 'bg-purple-300', hover: 'hover:bg-purple-200', active: 'bg-white text-purple-600', text: 'text-white' };
-        if (headerClass.includes('yellow')) return { primary: 'yellow', bg: 'bg-yellow-300', hover: 'hover:bg-yellow-200', active: 'bg-white text-yellow-600', text: 'text-white' };
-        if (headerClass.includes('cyan')) return { primary: 'cyan', bg: 'bg-cyan-300', hover: 'hover:bg-cyan-200', active: 'bg-white text-cyan-600', text: 'text-white' };
-        if (headerClass.includes('amber')) return { primary: 'amber', bg: 'bg-amber-300', hover: 'hover:bg-amber-200', active: 'bg-white text-amber-600', text: 'text-white' };
-        if (headerClass.includes('lime')) return { primary: 'lime', bg: 'bg-lime-300', hover: 'hover:bg-lime-200', active: 'bg-white text-lime-600', text: 'text-white' };
-        if (headerClass.includes('emerald')) return { primary: 'emerald', bg: 'bg-emerald-300', hover: 'hover:bg-emerald-200', active: 'bg-white text-emerald-600', text: 'text-white' };
-        if (headerClass.includes('indigo')) return { primary: 'indigo', bg: 'bg-indigo-300', hover: 'hover:bg-indigo-200', active: 'bg-white text-indigo-600', text: 'text-white' };
-        if (headerClass.includes('violet')) return { primary: 'violet', bg: 'bg-violet-300', hover: 'hover:bg-violet-200', active: 'bg-white text-violet-600', text: 'text-white' };
-        if (headerClass.includes('sky')) return { primary: 'sky', bg: 'bg-sky-300', hover: 'hover:bg-sky-200', active: 'bg-white text-sky-600', text: 'text-white' };
-        if (headerClass.includes('teal')) return { primary: 'teal', bg: 'bg-teal-300', hover: 'hover:bg-teal-200', active: 'bg-white text-teal-600', text: 'text-white' };
-        if (headerClass.includes('stone')) return { primary: 'stone', bg: 'bg-stone-300', hover: 'hover:bg-stone-200', active: 'bg-white text-stone-600', text: 'text-white' };
-        if (headerClass.includes('rose')) return { primary: 'rose', bg: 'bg-rose-300', hover: 'hover:bg-rose-200', active: 'bg-white text-rose-600', text: 'text-white' };
-        if (headerClass.includes('slate')) return { primary: 'slate', bg: 'bg-slate-300', hover: 'hover:bg-slate-200', active: 'bg-white text-slate-600', text: 'text-white' };
-        
-        return { primary: 'blue', bg: 'bg-blue-300', hover: 'hover:bg-blue-200', active: 'bg-white text-blue-600', text: 'text-white' };
-    };
-    
     const healthPercent = monsterHealth / monster.health;
     let healthBarColor = 'bg-green-500';
     if (healthPercent < 0.25) {
