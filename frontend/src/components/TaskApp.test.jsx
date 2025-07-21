@@ -32,7 +32,7 @@ describe('TaskApp Component', () => {
     });
 
     render(<TaskApp />);
-    expect(screen.getByText('Task Manager')).toBeInTheDocument();
+    expect(screen.getByText('Monstager')).toBeInTheDocument();
   });
 
   test('shows loading state initially', async () => {

@@ -4,6 +4,7 @@ import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { MONSTERS, DEFAULT_THEME, getMonsterById, getNextMonster } from '../monsterData';
 import { useAuth } from '../contexts/AuthContext';
+import { PencilSimple, Trash, Sun, Moon } from 'phosphor-react';
 
 const API_URL = "https://api.monstager.xyz/tasks";
 const LOCAL_TASKS_KEY = 'stm_tasks';
@@ -465,7 +466,7 @@ export default function TaskApp() {
             <div>
                 {statuses.map(status => (
                     <div key={status} className="mb-6">
-                        <h3 className="font-semibold mb-2">{status}</h3>
+                        <h3 className="font-semibold mb-2 text-gray-800 dark:text-gray-100">{status}</h3>
                         <ul className="space-y-2">
                             {tasks.filter(t => t.status === status).length === 0 ? (
                                 <li className="text-gray-400">No tasks</li>
@@ -503,7 +504,7 @@ export default function TaskApp() {
                     }}
                 />
                 <div className="flex-1">
-                    <h3 className="font-semibold mb-2">Tasks on {calendarDate.toLocaleDateString()}</h3>
+                    <h3 className="font-semibold mb-2 text-gray-800 dark:text-gray-100">Tasks on {calendarDate.toLocaleDateString()}</h3>
                     <ul className="space-y-2">
                         {(dateTasks[calendarDate.toDateString()] || []).length === 0 ? (
                             <li className="text-gray-400">No tasks</li>
@@ -598,16 +599,14 @@ export default function TaskApp() {
                             title="Edit task"
                             disabled={task.status === 'Done'}
                         >
-                            ✏️
+                            <PencilSimple size={20} weight="bold" />
                         </button>
                         <button
                             onClick={() => deleteTask(task.id)}
                             className="text-red-500 hover:text-red-700 transition-colors duration-200"
                             title="Delete task"
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
+                            <Trash size={20} weight="bold" />
                         </button>
                     </>
                 )}
@@ -665,13 +664,21 @@ export default function TaskApp() {
     
     const themeColors = getThemeColors();
 
+    const healthPercent = monsterHealth / monster.health;
+    let healthBarColor = 'bg-green-500';
+    if (healthPercent < 0.25) {
+        healthBarColor = 'bg-red-500';
+    } else if (healthPercent < 0.5) {
+        healthBarColor = 'bg-yellow-400';
+    }
+
     return (
         <div className={`max-w-full w-full mx-auto ${bgClass} min-h-screen ${textClass}`}>
             <div className="bg-white rounded-md">
                  <div className={headerClass}>
                     {/* Monster Battle UI with animations */}
                     <div className="flex flex-col items-center mb-6">
-                        <div className="font-bold text-lg mb-1">{monster.name}</div>
+                        <div className="monster-title text-lg font-bold text-white dark:text-gray-200">{monster.name}</div>
                         {/* Monster Image with animations */}
                         <motion.div 
                             className="text-6xl mb-4"
@@ -695,23 +702,44 @@ export default function TaskApp() {
                                 <span>{monster.image || '👾'}</span>
                             )}
                         </motion.div>
-                        <div className="w-full max-w-xs bg-gray-200 rounded-full h-6 mb-2">
-                            <motion.div 
-                                className={`${barClass} h-6 rounded-full`}
-                                initial={{ width: `${(monsterHealth / monster.health) * 100}%` }}
-                                animate={{ width: `${(monsterHealth / monster.health) * 100}%` }}
-                                transition={{ duration: 0.5, ease: "easeOut" }}
-                            />
+                        <div className="w-full max-w-xs mb-2 flex flex-col items-center">
+                            <div className="relative w-full">
+                                <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                                    <span className="text-xs font-bold text-white drop-shadow-sm select-none">
+                                        {monsterHealth} / {monster.health} HP
+                                    </span>
+                                </div>
+                                {/* Determine health bar color */}
+                                <div className="w-full h-7 bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-full shadow-inner overflow-hidden relative">
+                                    <motion.div
+                                        className={`h-full rounded-full ${healthBarColor} shadow-lg`}
+                                        style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
+                                        initial={{ width: `${(monsterHealth / monster.health) * 100}%` }}
+                                        animate={{ width: `${(monsterHealth / monster.health) * 100}%` }}
+                                        transition={{ duration: 0.5, ease: 'easeOut' }}
+                                    />
+                                </div>
+                            </div>
                         </div>
-                        <div className="text-sm mb-2">{monsterHealth} / {monster.health} HP</div>
                         {/* Monster Battle UI theme switcher */}
                         <div className="flex gap-2 items-center">
                             <span className="text-xs">Theme:</span>
                             <button
                                 onClick={() => setShowThemeModal(true)}
-                                className={`w-8 h-8 rounded-full border-2 ${currentTheme === -1 ? 'border-blue-700' : 'border-gray-300'} bg-blue-200`}
+                                className={`w-8 h-8 rounded-full border-2 ${currentTheme === -1 ? 'border-blue-700 bg-blue-200' : 'border-gray-300'}`}
                                 title="Show theme collection"
-                            ></button>
+                                style={currentTheme !== -1 && getMonsterById(currentTheme)?.theme?.bg ? { background: undefined, backgroundColor: undefined } : {}}
+                            >
+                                {currentTheme === -1 ? (
+                                    <span className="block w-full h-full rounded-full bg-blue-200"></span>
+                                ) : getMonsterById(currentTheme)?.image && getMonsterById(currentTheme).image.startsWith('/assets') ? (
+                                    <img src={getMonsterById(currentTheme).image} alt="theme" className="w-6 h-6 object-contain mx-auto" />
+                                ) : getMonsterById(currentTheme)?.theme?.bg ? (
+                                    <span className={`block w-full h-full rounded-full ${getMonsterById(currentTheme).theme.bg}`}></span>
+                                ) : (
+                                    <span className="block w-full h-full rounded-full bg-gray-300"></span>
+                                )}
+                            </button>
                         </div>
                         {/* Theme Modal */}
                         {showThemeModal && (
@@ -760,10 +788,13 @@ export default function TaskApp() {
                             <button
                                 key={btn.key}
                                 onClick={() => {
-                                    console.log('Switching to view:', btn.key);
                                     setView(btn.key);
                                 }}
-                                className={`px-4 py-2 rounded-md font-semibold transition-colors duration-200 ${view === btn.key ? themeColors.active : `${themeColors.bg} ${themeColors.text} ${themeColors.hover}`}`}
+                                className={`px-4 py-2 rounded-lg font-semibold border border-gray-300 dark:border-gray-700 transition-colors duration-200
+                                    ${view === btn.key
+                                        ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-300'
+                                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-600'}
+                                `}
                             >
                                 {btn.label}
                             </button>
@@ -776,13 +807,13 @@ export default function TaskApp() {
                             type="text"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="flex-1 px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="flex-1 px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                             placeholder="Search tasks..."
                         />
                         <select
                             value={filter}
                             onChange={(e) => setFilter(e.target.value)}
-                            className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100"
                         >
                             <option value="all">All</option>
                             <option value="active">Active</option>
@@ -795,13 +826,13 @@ export default function TaskApp() {
                         <input
                             value={input}
                             onChange={e => setInput(e.target.value)}
-                            className="flex-1 px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="flex-1 px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                             placeholder="Add a task..."
                         />
                         <select
                             value={priority}
                             onChange={(e) => setPriority(e.target.value)}
-                            className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100"
                         >
                             <option value="low">Low</option>
                             <option value="medium">Medium</option>
@@ -810,7 +841,7 @@ export default function TaskApp() {
                         <select
                             value={status}
                             onChange={e => setStatus(e.target.value)}
-                            className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100"
                         >
                             {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                         </select>
@@ -818,10 +849,10 @@ export default function TaskApp() {
                             type="date"
                             value={dueDate}
                             onChange={e => setDueDate(e.target.value)}
-                            className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100"
                         />
                         <button 
-                            className="bg-white text-blue-600 px-6 py-2 rounded-lg hover:bg-blue-50 font-semibold"
+                            className="bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-300 px-6 py-2 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-600 font-semibold border border-gray-300 dark:border-gray-700"
                             disabled={loading}
                         >
                             {loading ? "Adding..." : "Add"}
@@ -829,7 +860,7 @@ export default function TaskApp() {
                     </form>
                 </div>
 
-                <div className="p-6">
+                <div className="p-6 bg-gray-50 dark:bg-gray-900 rounded-b-md">
                     {error && (
                         <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
                             {error}

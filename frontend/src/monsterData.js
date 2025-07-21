@@ -67,7 +67,7 @@ export const getThemeUnlockMonsters = () => {
 
 // Default theme (original blue)
 export const DEFAULT_THEME = { 
-  bg: 'bg-gray-50', 
+  bg: 'bg-gray-50 dark:bg-gray-900', 
   header: 'from-blue-400 via-blue-500 to-blue-400', 
   bar: 'bg-pink-500' 
 };
