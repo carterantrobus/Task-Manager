@@ -4,7 +4,7 @@ import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { MONSTERS, DEFAULT_THEME, getMonsterById, getNextMonster } from '../monsterData';
 import { useAuth } from '../contexts/AuthContext';
-import { PencilSimple, Trash, Sun, Moon } from 'phosphor-react';
+import { PencilSimple, Trash } from 'phosphor-react';
 
 const API_URL = "https://api.monstager.xyz/tasks";
 const LOCAL_TASKS_KEY = 'stm_tasks';
@@ -619,7 +619,6 @@ export default function TaskApp() {
     const headerClass = `p-6 bg-gradient-to-r ${theme.header}`;
     const bgClass = `${theme.bg}`;
     const textClass = theme.text || '';
-    const barClass = theme.bar || 'bg-pink-500';
 
     // Theme-aware button colors
     const getThemeColors = () => {
@@ -662,8 +661,6 @@ export default function TaskApp() {
         return { primary: 'blue', bg: 'bg-blue-300', hover: 'hover:bg-blue-200', active: 'bg-white text-blue-600', text: 'text-white' };
     };
     
-    const themeColors = getThemeColors();
-
     const healthPercent = monsterHealth / monster.health;
     let healthBarColor = 'bg-green-500';
     if (healthPercent < 0.25) {
