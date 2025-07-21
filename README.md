@@ -245,7 +245,35 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Attributions
 
 ### Icons
-- Monster icons created by [Author Name] from [Flaticon](https://www.flaticon.com/) - [License Type]
+- Monster icons from [Flaticon](https://www.flaticon.com/) - [License Type]
 - Used under Flaticon's free license with attribution
+- Images used:
+   - [Scifi icons](https://www.flaticon.com/free-icons/scif) created by Freepik
+   - [Blob icons](https://www.flaticon.com/free-icons/blob) created by Nack_Thanakorn
+   - [Rat icons](https://www.flaticon.com/free-icons/rat) created by bsd
+   - [Spider icons](https://www.flaticon.com/free-icons/spider) created by Luvdat
+   - [Scary icons](https://www.flaticon.com/free-icons/scary) created by Imogen.Oh
+   - [Goblin icons](https://www.flaticon.com/free-icons/goblin) created by Park Jisun
+   - [Conscience icons](https://www.flaticon.com/free-icons/conscience) created by Park Jisun
+   - [Skeleton ribs](https://www.flaticon.com/free-icons/skeleton-ribs) icons created by Iconic Artisan
+   - [Costume icons](https://www.flaticon.com/free-icons/costume) created by smashingstocks
+   - [Nightmare icons](https://www.flaticon.com/free-icons/nightmare) created by Zain Jutt
+   - [Snake icons](https://www.flaticon.com/free-icons/snake) created by Freepik
+   - [Troll icons](https://www.flaticon.com/free-icons/troll) created by Smashicons
+   - [Troll icons](https://www.flaticon.com/free-icons/troll) created by Freepik
+   - [Wraith icons](https://www.flaticon.com/free-icons/wraith) created by Park Jisun
+   - [Giant icons](https://www.flaticon.com/free-icons/giant) created by Freepik
+   - [Giant icons](https://www.flaticon.com/free-icons/giant) created by wanicon
+   - [Mud icons](https://www.flaticon.com/free-icons/mud) created by Flat Icons
+   - [Golem icons](https://www.flaticon.com/free-icons/golem) created by Freepik
+   - [Animal icons](https://www.flaticon.com/free-icons/animal) created by max.icons
+   - [Scorpion icons](https://www.flaticon.com/free-icons/scorpion) created by Freepik
+   - [Esoteric icons](https://www.flaticon.com/free-icons/esoteric) created by Freepik
+   - [Chinese zodiac icons](https://www.flaticon.com/free-icons/chinese-zodiac) created by vectorsmarket15
+   - [Dragon icons](https://www.flaticon.com/free-icons/dragon) created by Chanut-is-Industries
+   - [Space warrior icons](https://www.flaticon.com/free-icons/space-warrior) created by Freepik
+   - [Supernatural icons](https://www.flaticon.com/free-icons/supernatural) created by winnievinzence
+   - [Elements icons](https://www.flaticon.com/free-icons/elements) created by Freepik
+   - [Demon icons](https://www.flaticon.com/free-icons/demon) created by Smashicons
 
 ---
