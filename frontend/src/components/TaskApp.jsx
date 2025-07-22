@@ -234,7 +234,10 @@ export default function TaskApp() {
     }, [tasks]);
 
     // User-specific localStorage keys
-    const getUserKey = (baseKey) => `${baseKey}_${user?.id || 'anonymous'}`;
+    const getUserKey = useCallback(
+        (baseKey) => `${baseKey}_${user?.id || 'anonymous'}`,
+        [user]
+    );
 
     // Load monster progress and themes from localStorage (user-specific)
     useEffect(() => {
