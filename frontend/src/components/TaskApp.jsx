@@ -527,11 +527,123 @@ export default function TaskApp() {
         );
     }
 
-    // RenderTask helper to keep task rendering logic DRY
-    function renderTask(task) {
+    // Memoized task component to prevent unnecessary re-renders
+    const TaskItem = React.memo(({ task }) => {
+        const [isEditing, setIsEditing] = useState(false);
+        const [editData, setEditData] = useState({
+            task: task.task,
+            priority: task.priority,
+            status: task.status || "To Do",
+            dueDate: task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 10) : ""
+        });
+
+        const handleSave = async () => {
+            if (!editData.task.trim()) return;
+            setLoading(true);
+            const updatedTaskObj = {
+                task: editData.task,
+                priority: editData.priority,
+                status: editData.status,
+                dueDate: editData.dueDate ? new Date(editData.dueDate).toISOString() : null,
+                completed: task.completed || false
+            };
+            
+            if (navigator.onLine) {
+                try {
+                    const res = await fetch(`${API_URL}/${task.id}`, {
+                        method: "PUT",
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify(updatedTaskObj)
+                    });
+                    if (!res.ok) throw new Error("Failed to update task");
+                    const updatedTask = await res.json();
+                    setTasks(tasks.map(t => t.id === task.id ? updatedTask : t));
+                    setIsEditing(false);
+                } catch (err) {
+                    setError("Failed to update task. Please try again.");
+                } finally {
+                    setLoading(false);
+                }
+            } else {
+                setTasks(tasks.map(t => t.id === task.id ? { ...t, ...updatedTaskObj } : t));
+                const pending = getPending();
+                pending.push({ type: 'edit', id: task.id, task: updatedTaskObj });
+                savePending(pending);
+                setIsEditing(false);
+                setError("(Offline) Edit will sync when online.");
+                setLoading(false);
+            }
+        };
+
+        const handleCancel = () => {
+            setIsEditing(false);
+            setEditData({
+                task: task.task,
+                priority: task.priority,
+                status: task.status || "To Do",
+                dueDate: task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 10) : ""
+            });
+        };
+
+        if (isEditing) {
+            return (
+                <motion.li
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -100 }}
+                    className={`${priorityColors[task.priority]} p-4 rounded-lg border flex items-center gap-4 transition-all duration-200`}
+                >
+                    <div className="flex flex-wrap items-center gap-2 w-full">
+                        <input
+                            value={editData.task}
+                            onChange={e => setEditData(prev => ({ ...prev, task: e.target.value }))}
+                            className="flex-1 min-w-[120px] px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            autoFocus
+                        />
+                        <select
+                            value={editData.priority}
+                            onChange={e => setEditData(prev => ({ ...prev, priority: e.target.value }))}
+                            className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                        <select
+                            value={editData.status}
+                            onChange={e => setEditData(prev => ({ ...prev, status: e.target.value }))}
+                            className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                        </select>
+                        <input
+                            type="date"
+                            value={editData.dueDate}
+                            onChange={e => setEditData(prev => ({ ...prev, dueDate: e.target.value }))}
+                            className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <button
+                            onClick={handleSave}
+                            className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 font-semibold"
+                            disabled={loading}
+                            style={{ minWidth: 80 }}
+                        >
+                            {loading ? "Saving..." : "Save"}
+                        </button>
+                        <button
+                            onClick={handleCancel}
+                            className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors duration-200 font-semibold"
+                            disabled={loading}
+                            style={{ minWidth: 80 }}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </motion.li>
+            );
+        }
+
         return (
             <motion.li
-                key={task.id}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -100 }}
                 className={`${priorityColors[task.priority]} p-4 rounded-lg border flex items-center gap-4 transition-all duration-200`}
@@ -543,85 +655,40 @@ export default function TaskApp() {
                     className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     disabled={task.completed}
                 />
-                {editingTaskId === task.id ? (
-                    <div className="flex flex-wrap items-center gap-2 w-full">
-                        <input
-                            value={editFormData.task}
-                            onChange={e => setEditFormData(prev => ({ ...prev, task: e.target.value }))}
-                            className="flex-1 min-w-[120px] px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        <select
-                            value={editFormData.priority}
-                            onChange={e => setEditFormData(prev => ({ ...prev, priority: e.target.value }))}
-                            className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
-                        </select>
-                        <select
-                            value={editFormData.status}
-                            onChange={e => setEditFormData(prev => ({ ...prev, status: e.target.value }))}
-                            className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                        </select>
-                        <input
-                            type="date"
-                            value={editFormData.dueDate}
-                            onChange={e => setEditFormData(prev => ({ ...prev, dueDate: e.target.value }))}
-                            className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        <button
-                            onClick={saveEdit}
-                            className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 font-semibold"
-                            disabled={loading}
-                            style={{ minWidth: 80 }}
-                        >
-                            {loading ? "Saving..." : "Save"}
-                        </button>
-                        <button
-                            onClick={cancelEdit}
-                            className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors duration-200 font-semibold"
-                            disabled={loading}
-                            style={{ minWidth: 80 }}
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                ) : (
-                    <>
-                        <span className={`flex-1 ${task.completed ? 'line-through text-gray-500' : ''}`}>
-                            {task.task}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                            {task.priority}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                            {task.status || "To Do"}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                            {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "No due date"}
-                        </span>
-                        <button
-                            onClick={() => handleEdit(task.id)}
-                            className={`text-blue-500 hover:text-blue-700 transition-colors duration-200 ${task.status === 'Done' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            title="Edit task"
-                            disabled={task.status === 'Done'}
-                        >
-                            <PencilSimple size={20} weight="bold" />
-                        </button>
-                        <button
-                            onClick={() => deleteTask(task.id)}
-                            className="text-red-500 hover:text-red-700 transition-colors duration-200"
-                            title="Delete task"
-                        >
-                            <Trash size={20} weight="bold" />
-                        </button>
-                    </>
-                )}
+                <span className={`flex-1 ${task.completed ? 'line-through text-gray-500' : ''}`}>
+                    {task.task}
+                </span>
+                <span className="text-sm text-gray-500">
+                    {task.priority}
+                </span>
+                <span className="text-sm text-gray-500">
+                    {task.status || "To Do"}
+                </span>
+                <span className="text-sm text-gray-500">
+                    {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "No due date"}
+                </span>
+                <button
+                    onClick={() => setIsEditing(true)}
+                    className={`text-blue-500 hover:text-blue-700 transition-colors duration-200 ${task.status === 'Done' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    title="Edit task"
+                    disabled={task.status === 'Done'}
+                >
+                    <PencilSimple size={20} weight="bold" />
+                </button>
+                <button
+                    onClick={() => deleteTask(task.id)}
+                    className="text-red-500 hover:text-red-700 transition-colors duration-200"
+                    title="Delete task"
+                >
+                    <Trash size={20} weight="bold" />
+                </button>
             </motion.li>
         );
+    });
+
+    // RenderTask helper to keep task rendering logic DRY
+    function renderTask(task) {
+        return <TaskItem key={task.id} task={task} />;
     }
 
     // Theme classes
