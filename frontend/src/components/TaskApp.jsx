@@ -342,8 +342,14 @@ export default function TaskApp() {
             setIsMonsterDefeated(true);
             playDefeatSound();
 
-            // Unlock theme if not already unlocked
-            if (!unlockedThemes.includes(monsterId)) {
+            // Unlock theme only if the monster has a unique, non-default theme
+            const defeatedMonster = getMonsterById(monsterId);
+            if (
+                defeatedMonster &&
+                defeatedMonster.theme &&
+                defeatedMonster.theme !== DEFAULT_THEME &&
+                !unlockedThemes.includes(monsterId)
+            ) {
                 setUnlockedThemes([...unlockedThemes, monsterId]);
             }
 
