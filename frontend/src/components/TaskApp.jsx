@@ -22,7 +22,7 @@ const MONSTER_PROGRESS_KEY = 'stm_monster_progress';
 const UNLOCKED_THEMES_KEY = 'stm_unlocked_themes';
 
 export default function TaskApp() {
-    const { getAuthHeaders, user } = useAuth();
+    const { getAuthHeaders } = useAuth();
     const [tasks, setTasks] = useState([]);
     const [input, setInput] = useState("");
     const [error, setError] = useState("");
@@ -31,10 +31,6 @@ export default function TaskApp() {
     const [filter, setFilter] = useState("all");
     const [searchTerm, setSearchTerm] = useState("");
     const [editingTaskId, setEditingTaskId] = useState(null);
-    const [editInput, setEditInput] = useState("");
-    const [editPriority, setEditPriority] = useState("medium");
-    const [editStatus, setEditStatus] = useState("To Do");
-    const [editDueDate, setEditDueDate] = useState("");
     const [status, setStatus] = useState("To Do");
     const [dueDate, setDueDate] = useState("");
     const [view, setView] = useState('list');
@@ -191,13 +187,13 @@ export default function TaskApp() {
     };
 
     const saveEdit = async () => {
-        if (!editInput.trim()) return;
+        if (!input.trim()) return;
         setLoading(true);
         const updatedTaskObj = {
-            task: editInput,
-            priority: editPriority,
-            status: editStatus,
-            dueDate: editDueDate ? new Date(editDueDate).toISOString() : null,
+            task: input,
+            priority,
+            status,
+            dueDate: dueDate ? new Date(dueDate).toISOString() : null,
             completed: tasks.find(t => t.id === editingTaskId)?.completed || false
         };
         if (navigator.onLine) {
@@ -211,10 +207,10 @@ export default function TaskApp() {
                 const updatedTask = await res.json();
                 setTasks(tasks.map(t => t.id === editingTaskId ? updatedTask : t));
                 setEditingTaskId(null);
-                setEditInput("");
-                setEditPriority("medium");
-                setEditStatus("To Do");
-                setEditDueDate("");
+                setInput("");
+                setPriority("medium");
+                setStatus("To Do");
+                setDueDate("");
                 setError("");
             } catch (err) {
                 setError("Failed to update task. Please try again.");
@@ -228,10 +224,10 @@ export default function TaskApp() {
             pending.push({ type: 'edit', id: editingTaskId, task: updatedTaskObj });
             savePending(pending);
             setEditingTaskId(null);
-            setEditInput("");
-            setEditPriority("medium");
-            setEditStatus("To Do");
-            setEditDueDate("");
+            setInput("");
+            setPriority("medium");
+            setStatus("To Do");
+            setDueDate("");
             setError("(Offline) Edit will sync when online.");
             setLoading(false);
         }
@@ -315,60 +311,34 @@ export default function TaskApp() {
         localStorage.setItem(LOCAL_TASKS_KEY, JSON.stringify(tasks));
     }, [tasks]);
 
-    // User-specific localStorage keys
-    const getUserKey = useCallback((baseKey) => `${baseKey}_${user?.id || 'anonymous'}`, [user?.id]);
-
-    // Load monster progress and themes from localStorage (user-specific)
+    // Load monster progress and themes from localStorage
     useEffect(() => {
-        if (!user) return;
-        
-        const saved = localStorage.getItem(getUserKey(MONSTER_PROGRESS_KEY));
+        const saved = localStorage.getItem(MONSTER_PROGRESS_KEY);
         if (saved) {
             const { id, health } = JSON.parse(saved);
             setMonsterId(id);
             setMonsterHealth(health);
-        } else {
-            // New user - reset to defaults
-            setMonsterId(1);
-            setMonsterHealth(MONSTERS[0].health);
         }
-        
-        const unlocked = localStorage.getItem(getUserKey(UNLOCKED_THEMES_KEY));
-        if (unlocked) {
-            setUnlockedThemes(JSON.parse(unlocked));
-        } else {
-            setUnlockedThemes([-1]);
-        }
-        
-        const theme = localStorage.getItem(getUserKey('stm_theme'));
-        if (theme) {
-            setCurrentTheme(Number(theme));
-        } else {
-            setCurrentTheme(-1);
-        }
-    }, [user, getUserKey]);
-
-    // Save monster progress (user-specific)
+        const unlocked = localStorage.getItem(UNLOCKED_THEMES_KEY);
+        if (unlocked) setUnlockedThemes(JSON.parse(unlocked));
+        const theme = localStorage.getItem('stm_theme');
+        if (theme) setCurrentTheme(Number(theme));
+    }, []);
+    // Save monster progress
     useEffect(() => {
-        if (!user) return;
-        localStorage.setItem(getUserKey(MONSTER_PROGRESS_KEY), JSON.stringify({ id: monsterId, health: monsterHealth }));
-    }, [monsterId, monsterHealth, user, getUserKey]);
-
-    // Save unlocked themes (user-specific)
+        localStorage.setItem(MONSTER_PROGRESS_KEY, JSON.stringify({ id: monsterId, health: monsterHealth }));
+    }, [monsterId, monsterHealth]);
+    // Save unlocked themes
     useEffect(() => {
-        if (!user) return;
-        localStorage.setItem(getUserKey(UNLOCKED_THEMES_KEY), JSON.stringify(unlockedThemes));
-    }, [unlockedThemes, user, getUserKey]);
-
-    // Save theme (user-specific)
+        localStorage.setItem(UNLOCKED_THEMES_KEY, JSON.stringify(unlockedThemes));
+    }, [unlockedThemes]);
+    // Save theme
     useEffect(() => {
-        if (!user) return;
-        localStorage.setItem(getUserKey('stm_theme'), currentTheme);
-    }, [currentTheme, user, getUserKey]);
+        localStorage.setItem('stm_theme', currentTheme);
+    }, [currentTheme]);
 
     const [showThemeModal, setShowThemeModal] = useState(false);
     const themeModalRef = useRef(null);
-    const editInputRef = useRef(null);
 
     // Close modal on outside click
     useEffect(() => {
@@ -548,11 +518,10 @@ export default function TaskApp() {
     }
 
     // RenderTask helper to keep task rendering logic DRY
-    const renderTask = (task) => {
+    function renderTask(task) {
         return (
             <motion.li
                 key={task.id}
-                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -100 }}
                 className={`${priorityColors[task.priority]} p-4 rounded-lg border flex items-center gap-4 transition-all duration-200`}
@@ -567,12 +536,9 @@ export default function TaskApp() {
                 {editingTaskId === task.id ? (
                     <div className="flex flex-wrap items-center gap-2 w-full">
                         <input
-                            ref={editInputRef}
-                            key={`edit-${editingTaskId}`}
-                            value={editInput}
-                            onChange={e => setEditInput(e.target.value)}
+                            value={input}
+                            onChange={e => setInput(e.target.value)}
                             className="flex-1 min-w-[120px] px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            autoFocus
                         />
                         <select
                             value={priority}
@@ -646,7 +612,7 @@ export default function TaskApp() {
                 )}
             </motion.li>
         );
-    };
+    }
 
     // Theme classes
     const theme = currentTheme === -1 ? DEFAULT_THEME : getMonsterById(currentTheme)?.theme || DEFAULT_THEME;
@@ -892,20 +858,3 @@ export default function TaskApp() {
         </div>
     );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
