@@ -620,8 +620,10 @@ export default function TaskApp() {
                     {task.status || "To Do"}
                 </span>
                 <span className="text-sm text-gray-500">
-                    {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "No due date"}
-                </span>
+    {task.dueDate ? (
+        `${new Date(task.dueDate).toLocaleDateString()} ${new Date(task.dueDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+    ) : "No due date"}
+</span>
                 <button
                     onClick={() => setIsEditing(true)}
                     className={`text-blue-500 hover:text-blue-700 transition-colors duration-200 ${task.status === 'Done' ? 'opacity-50 cursor-not-allowed' : ''}`}
