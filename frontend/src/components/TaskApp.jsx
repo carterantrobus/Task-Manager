@@ -337,6 +337,23 @@ export default function TaskApp() {
         localStorage.setItem('stm_theme', currentTheme);
     }, [currentTheme]);
 
+    // Clear cached data when user changes
+    useEffect(() => {
+        // Reset monster progress and themes for new user
+        setMonsterId(1);
+        setMonsterHealth(MONSTERS[0].health);
+        setUnlockedThemes([-1]);
+        setCurrentTheme(-1);
+        setTasks([]);
+        
+        // Clear localStorage cache
+        localStorage.removeItem(LOCAL_TASKS_KEY);
+        localStorage.removeItem(LOCAL_PENDING_KEY);
+        localStorage.removeItem(MONSTER_PROGRESS_KEY);
+        localStorage.removeItem(UNLOCKED_THEMES_KEY);
+        localStorage.removeItem('stm_theme');
+    }, [getAuthHeaders]); // This will trigger when user changes (token changes)
+
     const [showThemeModal, setShowThemeModal] = useState(false);
     const themeModalRef = useRef(null);
 
@@ -858,3 +875,4 @@ export default function TaskApp() {
         </div>
     );
 }
+
