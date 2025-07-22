@@ -96,25 +96,25 @@ export default function TaskApp() {
     }, [getAuthHeaders]);
 
     const addTask = async (e) => {
-        e.preventDefault();
-        if (!input.trim()) return;
-        setLoading(true);
-        // Combine date and time into ISO string if provided
-        let dueDateTime = null;
-        if (dueDate) {
-            if (dueTime) {
-                dueDateTime = new Date(`${dueDate}T${dueTime}`).toISOString();
-            } else {
-                dueDateTime = new Date(`${dueDate}T00:00`).toISOString();
-            }
-        }
-        const newTaskObj = {
-            task: input,
-            priority,
-            status,
-            dueDate: dueDateTime,
-            createdAt: new Date().toISOString()
-        };
+    e.preventDefault();
+    if (!input.trim()) return;
+    if (dueDate && !dueTime) {
+        setError('Please select a time if you select a date.');
+        return;
+    }
+    setLoading(true);
+    // Combine date and time as local string (not ISO/UTC)
+    let dueDateTime = null;
+    if (dueDate && dueTime) {
+        dueDateTime = `${dueDate}T${dueTime}`;
+    }
+    const newTaskObj = {
+        task: input,
+        priority,
+        status,
+        dueDate: dueDateTime,
+        createdAt: new Date().toISOString()
+    };
         if (navigator.onLine) {
             try {
                 const res = await fetch(API_URL, {
@@ -488,16 +488,21 @@ export default function TaskApp() {
             task: task.task,
             priority: task.priority,
             status: task.status || "To Do",
-            dueDate: task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 10) : ""
+            dueDate: task.dueDate ? task.dueDate.split('T')[0] : "",
+            dueTime: task.dueDate ? (task.dueDate.split('T')[1] || "") : ""
         });
 
         const handleSave = async () => {
             if (!editData.task.trim()) return;
+            if (editData.dueDate && !editData.dueTime) {
+                setError('Please select a time if you select a date.');
+                return;
+            }
             const updatedTaskObj = {
                 task: editData.task,
                 priority: editData.priority,
                 status: editData.status,
-                dueDate: editData.dueDate ? new Date(editData.dueDate).toISOString() : null,
+                dueDate: (editData.dueDate && editData.dueTime) ? `${editData.dueDate}T${editData.dueTime}` : null,
                 completed: task.completed || false
             };
             
@@ -531,7 +536,8 @@ export default function TaskApp() {
                 task: task.task,
                 priority: task.priority,
                 status: task.status || "To Do",
-                dueDate: task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 10) : ""
+                dueDate: task.dueDate ? task.dueDate.split('T')[0] : "",
+                dueTime: task.dueDate ? (task.dueDate.split('T')[1] || "") : ""
             });
         };
 
@@ -620,9 +626,11 @@ export default function TaskApp() {
                     {task.status || "To Do"}
                 </span>
                 <span className="text-sm text-gray-500">
-    {task.dueDate ? (
-        `${new Date(task.dueDate).toLocaleDateString()} ${new Date(task.dueDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-    ) : "No due date"}
+    {task.dueDate ? (() => {
+        // Parse local 'YYYY-MM-DDTHH:mm' string
+        const [date, time] = task.dueDate.split('T');
+        return `${date} ${time}`;
+    })() : "No due date"}
 </span>
                 <button
                     onClick={() => setIsEditing(true)}
