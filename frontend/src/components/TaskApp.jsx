@@ -585,6 +585,7 @@ export default function TaskApp() {
     }
 
     // Add the missing handleMonsterAttack function
+    // eslint-disable-next-line no-unused-vars
     const handleMonsterAttack = () => {
         setMonsterHealth(prev => {
             const newHealth = Math.max(0, prev - 1);
