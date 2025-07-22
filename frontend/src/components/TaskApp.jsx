@@ -342,25 +342,25 @@ export default function TaskApp() {
         } else {
             setCurrentTheme(-1);
         }
-    }, [user]);
+    }, [user, getUserKey]);
 
     // Save monster progress (user-specific)
     useEffect(() => {
         if (!user) return;
         localStorage.setItem(getUserKey(MONSTER_PROGRESS_KEY), JSON.stringify({ id: monsterId, health: monsterHealth }));
-    }, [monsterId, monsterHealth, user]);
+    }, [monsterId, monsterHealth, user, getUserKey]);
 
     // Save unlocked themes (user-specific)
     useEffect(() => {
         if (!user) return;
         localStorage.setItem(getUserKey(UNLOCKED_THEMES_KEY), JSON.stringify(unlockedThemes));
-    }, [unlockedThemes, user]);
+    }, [unlockedThemes, user, getUserKey]);
 
     // Save theme (user-specific)
     useEffect(() => {
         if (!user) return;
         localStorage.setItem(getUserKey('stm_theme'), currentTheme);
-    }, [currentTheme, user]);
+    }, [currentTheme, user, getUserKey]);
 
     const [showThemeModal, setShowThemeModal] = useState(false);
     const themeModalRef = useRef(null);
@@ -883,6 +883,7 @@ export default function TaskApp() {
         </div>
     );
 }
+
 
 
 
