@@ -9,6 +9,7 @@ import { PencilSimple, Trash } from 'phosphor-react';
 const API_URL = "https://api.monstager.xyz/tasks";
 const LOCAL_TASKS_KEY = 'stm_tasks';
 const LOCAL_PENDING_KEY = 'stm_pending';
+const UNLOCKED_THEMES_KEY = 'stm_unlocked_themes';
 
 const priorityColors = {
     low: "bg-green-100 border-green-200",
@@ -21,7 +22,7 @@ const statusOptions = ["To Do", "In Progress", "Done"];
 const MONSTER_PROGRESS_KEY = 'stm_monster_progress';
 
 export default function TaskApp() {
-    const { getAuthHeaders } = useAuth();
+    const { getAuthHeaders, user } = useAuth();
     const [tasks, setTasks] = useState([]);
     const [input, setInput] = useState("");
     const [error, setError] = useState("");
@@ -36,9 +37,7 @@ export default function TaskApp() {
 
     const [monsterId, setMonsterId] = useState(1);
     const [monsterHealth, setMonsterHealth] = useState(MONSTERS[0].health);
-    // eslint-disable-next-line no-unused-vars
     const [unlockedThemes, setUnlockedThemes] = useState([-1]); // -1 for default theme
-    // eslint-disable-next-line no-unused-vars
     const [currentTheme, setCurrentTheme] = useState(-1); // -1 for default blue
     const [isMonsterHit, setIsMonsterHit] = useState(false);
     const [isMonsterDefeated, setIsMonsterDefeated] = useState(false);
@@ -234,20 +233,56 @@ export default function TaskApp() {
         localStorage.setItem(LOCAL_TASKS_KEY, JSON.stringify(tasks));
     }, [tasks]);
 
-    // Load monster progress from localStorage
+    // User-specific localStorage keys
+    const getUserKey = (baseKey) => `${baseKey}_${user?.id || 'anonymous'}`;
+
+    // Load monster progress and themes from localStorage (user-specific)
     useEffect(() => {
-        const saved = localStorage.getItem(MONSTER_PROGRESS_KEY);
+        if (!user) return;
+        
+        const saved = localStorage.getItem(getUserKey(MONSTER_PROGRESS_KEY));
         if (saved) {
             const { id, health } = JSON.parse(saved);
             setMonsterId(id);
             setMonsterHealth(health);
+        } else {
+            // New user - reset to defaults
+            setMonsterId(1);
+            setMonsterHealth(MONSTERS[0].health);
         }
-    }, []);
+        
+        const unlocked = localStorage.getItem(getUserKey(UNLOCKED_THEMES_KEY));
+        if (unlocked) {
+            setUnlockedThemes(JSON.parse(unlocked));
+        } else {
+            setUnlockedThemes([-1]);
+        }
+        
+        const theme = localStorage.getItem(getUserKey('stm_theme'));
+        if (theme) {
+            setCurrentTheme(Number(theme));
+        } else {
+            setCurrentTheme(-1);
+        }
+    }, [user, getUserKey]);
 
-    // Save monster progress
+    // Save monster progress (user-specific)
     useEffect(() => {
-        localStorage.setItem(MONSTER_PROGRESS_KEY, JSON.stringify({ id: monsterId, health: monsterHealth }));
-    }, [monsterId, monsterHealth]);
+        if (!user) return;
+        localStorage.setItem(getUserKey(MONSTER_PROGRESS_KEY), JSON.stringify({ id: monsterId, health: monsterHealth }));
+    }, [monsterId, monsterHealth, user, getUserKey]);
+
+    // Save unlocked themes (user-specific)
+    useEffect(() => {
+        if (!user) return;
+        localStorage.setItem(getUserKey(UNLOCKED_THEMES_KEY), JSON.stringify(unlockedThemes));
+    }, [unlockedThemes, user, getUserKey]);
+
+    // Save theme (user-specific)
+    useEffect(() => {
+        if (!user) return;
+        localStorage.setItem(getUserKey('stm_theme'), currentTheme);
+    }, [currentTheme, user, getUserKey]);
 
     const [showThemeModal, setShowThemeModal] = useState(false);
     const themeModalRef = useRef(null);
@@ -857,3 +892,6 @@ export default function TaskApp() {
         </div>
     );
 }
+
+
+
