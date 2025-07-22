@@ -36,7 +36,9 @@ export default function TaskApp() {
 
     const [monsterId, setMonsterId] = useState(1);
     const [monsterHealth, setMonsterHealth] = useState(MONSTERS[0].health);
+    // eslint-disable-next-line no-unused-vars
     const [unlockedThemes, setUnlockedThemes] = useState([-1]); // -1 for default theme
+    // eslint-disable-next-line no-unused-vars
     const [currentTheme, setCurrentTheme] = useState(-1); // -1 for default blue
     const [isMonsterHit, setIsMonsterHit] = useState(false);
     const [isMonsterDefeated, setIsMonsterDefeated] = useState(false);
@@ -265,29 +267,33 @@ export default function TaskApp() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [showThemeModal]);
 
-    // On task completion, damage monster
+    // Handle task completion - updates task status and triggers monster battle
     const handleCompleteTask = async (id) => {
-        const task = tasks.find(t => t.id === id);
-        if (!task || task.completed) return;
-        // Update status to 'Done' when completing
+        const taskToComplete = tasks.find(t => t.id === id);
+        if (!taskToComplete) return;
+        
+        const updatedTask = { ...taskToComplete, completed: !taskToComplete.completed };
+        
         if (navigator.onLine) {
             try {
                 const res = await fetch(`${API_URL}/${id}`, {
                     method: "PUT",
                     headers: getAuthHeaders(),
-                    body: JSON.stringify({ ...task, completed: true, status: 'Done' })
+                    body: JSON.stringify({ ...updatedTask, status: 'Done' })
                 });
                 if (!res.ok) throw new Error("Failed to update task");
-                const updatedTask = await res.json();
-                setTasks(tasks.map(t => t.id === id ? updatedTask : t));
+                const data = await res.json();
+                setTasks(tasks.map(t => t.id === id ? data : t));
             } catch (err) {
                 setError("Failed to update task. Please try again.");
+                return; // Exit early on error
             }
         } else {
             // Offline: update local tasks and pending
-            setTasks(tasks.map(t => t.id === id ? { ...t, completed: true, status: 'Done' } : t));
+            const offlineUpdate = { ...updatedTask, status: 'Done' };
+            setTasks(tasks.map(t => t.id === id ? offlineUpdate : t));
             const pending = getPending();
-            pending.push({ type: 'edit', id, task: { ...task, completed: true, status: 'Done' } });
+            pending.push({ type: 'edit', id, task: offlineUpdate });
             savePending(pending);
             setError("(Offline) Completion will sync when online.");
         }
@@ -412,7 +418,7 @@ export default function TaskApp() {
     };
 
     // Task Item Component
-    const TaskItem = React.memo(({ task }) => {
+    const TaskItem = React.memo(({ task, onComplete }) => {
         const [isEditing, setIsEditing] = useState(false);
         const [editData, setEditData] = useState({
             task: task.task,
@@ -522,41 +528,9 @@ export default function TaskApp() {
             );
         }
 
-        const handleCompleteTask = async (id) => {
-            const taskToComplete = tasks.find(t => t.id === id);
-            if (!taskToComplete) return;
-            
-            const updatedTask = { ...taskToComplete, completed: !taskToComplete.completed };
-            
-            if (navigator.onLine) {
-                try {
-                    const res = await fetch(`${API_URL}/${id}`, {
-                        method: 'PUT',
-                        headers: getAuthHeaders(),
-                        body: JSON.stringify(updatedTask)
-                    });
-                    if (!res.ok) throw new Error('Failed to update task');
-                    const data = await res.json();
-                    setTasks(tasks.map(t => t.id === id ? data : t));
-                    
-                    // Monster battle logic when task is completed
-                    if (updatedTask.completed) {
-                        handleMonsterAttack();
-                    }
-                } catch (err) {
-                    setError('Failed to update task status');
-                }
-            } else {
-                setTasks(tasks.map(t => t.id === id ? updatedTask : t));
-                const pending = getPending();
-                pending.push({ type: 'edit', id, task: updatedTask });
-                savePending(pending);
-                setError('(Offline) Task status will sync when online');
-                
-                if (updatedTask.completed) {
-                    handleMonsterAttack();
-                }
-            }
+        // Handle task completion
+        const handleComplete = () => {
+            onComplete(task.id);
         };
 
         return (
@@ -568,7 +542,7 @@ export default function TaskApp() {
                 <input
                     type="checkbox"
                     checked={task.completed}
-                    onChange={() => handleCompleteTask(task.id)}
+                    onChange={handleComplete}
                     className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     disabled={task.completed}
                 />
@@ -603,9 +577,11 @@ export default function TaskApp() {
         );
     });
 
+
+
     // RenderTask helper to keep task rendering logic DRY
     function renderTask(task) {
-        return <TaskItem key={task.id} task={task} />;
+        return <TaskItem key={task.id} task={task} onComplete={handleCompleteTask} />;
     }
 
     // Add the missing handleMonsterAttack function
