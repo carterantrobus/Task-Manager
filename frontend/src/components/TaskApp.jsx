@@ -19,7 +19,6 @@ const priorityColors = {
 const statusOptions = ["To Do", "In Progress", "Done"];
 
 const MONSTER_PROGRESS_KEY = 'stm_monster_progress';
-const UNLOCKED_THEMES_KEY = 'stm_unlocked_themes';
 
 export default function TaskApp() {
     const { getAuthHeaders } = useAuth();
@@ -30,25 +29,12 @@ export default function TaskApp() {
     const [priority, setPriority] = useState("medium");
     const [filter, setFilter] = useState("all");
     const [searchTerm, setSearchTerm] = useState("");
-    const [editingTaskId, setEditingTaskId] = useState(null);
     const [status, setStatus] = useState("To Do");
-    const [dueDate, setDueDate] = useState("");
-    
-    // Separate state for edit form
-    const [editFormData, setEditFormData] = useState({
-        task: "",
-        priority: "medium",
-        status: "To Do",
-        dueDate: ""
-    });
     const [view, setView] = useState('list');
     const [calendarDate, setCalendarDate] = useState(new Date());
 
-    // Monster battle state
     const [monsterId, setMonsterId] = useState(1);
     const [monsterHealth, setMonsterHealth] = useState(MONSTERS[0].health);
-    const [unlockedThemes, setUnlockedThemes] = useState([-1]); // -1 for default theme
-    const [currentTheme, setCurrentTheme] = useState(-1); // -1 for default blue
     const [isMonsterHit, setIsMonsterHit] = useState(false);
     const [isMonsterDefeated, setIsMonsterDefeated] = useState(false);
     const monster = getMonsterById(monsterId);
@@ -87,13 +73,6 @@ export default function TaskApp() {
         setTimeout(() => playSound(784, 0.3), 400);  // G
     };
 
-    const playThemeUnlockSound = () => {
-        // Play a special unlock sequence
-        setTimeout(() => playSound(659, 0.15), 0);   // E
-        setTimeout(() => playSound(784, 0.15), 150); // G
-        setTimeout(() => playSound(1047, 0.2), 300); // C (high)
-    };
-
     const fetchTasks = useCallback(async () => {
         setLoading(true);
         try {
@@ -119,7 +98,7 @@ export default function TaskApp() {
             task: input,
             priority,
             status,
-            dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+            dueDate: null,
             createdAt: new Date().toISOString()
         };
         if (navigator.onLine) {
@@ -135,7 +114,7 @@ export default function TaskApp() {
                 setInput("");
                 setPriority("medium");
                 setStatus("To Do");
-                setDueDate("");
+
                 setError("");
             } catch (err) {
                 setError("Failed to add task. Please try again.");
@@ -152,7 +131,6 @@ export default function TaskApp() {
             setInput("");
             setPriority("medium");
             setStatus("To Do");
-            setDueDate("");
             setError("(Offline) Task will sync when online.");
             setLoading(false);
         }
@@ -179,76 +157,6 @@ export default function TaskApp() {
             savePending(pending);
             setError("(Offline) Delete will sync when online.");
         }
-    };
-
-
-
-    const handleEdit = (id) => {
-        setEditingTaskId(id);
-        const taskToEdit = tasks.find(task => task.id === id);
-        if (taskToEdit) {
-            setEditFormData({
-                task: taskToEdit.task,
-                priority: taskToEdit.priority,
-                status: taskToEdit.status || "To Do",
-                dueDate: taskToEdit.dueDate ? taskToEdit.dueDate.slice(0, 10) : ""
-            });
-        }
-    };
-
-    const saveEdit = async () => {
-        if (!editFormData.task.trim()) return;
-        setLoading(true);
-        const updatedTaskObj = {
-            task: editFormData.task,
-            priority: editFormData.priority,
-            status: editFormData.status,
-            dueDate: editFormData.dueDate ? new Date(editFormData.dueDate).toISOString() : null,
-            completed: tasks.find(t => t.id === editingTaskId)?.completed || false
-        };
-        if (navigator.onLine) {
-            try {
-                const res = await fetch(`${API_URL}/${editingTaskId}`, {
-                    method: "PUT",
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify(updatedTaskObj)
-                });
-                if (!res.ok) throw new Error("Failed to update task");
-                const updatedTask = await res.json();
-                setTasks(tasks.map(t => t.id === editingTaskId ? updatedTask : t));
-                setEditingTaskId(null);
-                setInput("");
-                setPriority("medium");
-                setStatus("To Do");
-                setDueDate("");
-                setError("");
-            } catch (err) {
-                setError("Failed to update task. Please try again.");
-            } finally {
-                setLoading(false);
-            }
-        } else {
-            // Offline: update local tasks and pending
-            setTasks(tasks.map(t => t.id === editingTaskId ? { ...t, ...updatedTaskObj } : t));
-            const pending = getPending();
-            pending.push({ type: 'edit', id: editingTaskId, task: updatedTaskObj });
-            savePending(pending);
-            setEditingTaskId(null);
-            setInput("");
-            setPriority("medium");
-            setStatus("To Do");
-            setDueDate("");
-            setError("(Offline) Edit will sync when online.");
-            setLoading(false);
-        }
-    };
-
-    const cancelEdit = () => {
-        setEditingTaskId(null);
-        setInput("");
-        setPriority("medium");
-        setStatus("To Do");
-        setDueDate("");
     };
 
     const filteredTasks = tasks
@@ -321,7 +229,7 @@ export default function TaskApp() {
         localStorage.setItem(LOCAL_TASKS_KEY, JSON.stringify(tasks));
     }, [tasks]);
 
-    // Load monster progress and themes from localStorage
+    // Load monster progress from localStorage
     useEffect(() => {
         const saved = localStorage.getItem(MONSTER_PROGRESS_KEY);
         if (saved) {
@@ -329,23 +237,12 @@ export default function TaskApp() {
             setMonsterId(id);
             setMonsterHealth(health);
         }
-        const unlocked = localStorage.getItem(UNLOCKED_THEMES_KEY);
-        if (unlocked) setUnlockedThemes(JSON.parse(unlocked));
-        const theme = localStorage.getItem('stm_theme');
-        if (theme) setCurrentTheme(Number(theme));
     }, []);
+
     // Save monster progress
     useEffect(() => {
         localStorage.setItem(MONSTER_PROGRESS_KEY, JSON.stringify({ id: monsterId, health: monsterHealth }));
     }, [monsterId, monsterHealth]);
-    // Save unlocked themes
-    useEffect(() => {
-        localStorage.setItem(UNLOCKED_THEMES_KEY, JSON.stringify(unlockedThemes));
-    }, [unlockedThemes]);
-    // Save theme
-    useEffect(() => {
-        localStorage.setItem('stm_theme', currentTheme);
-    }, [currentTheme]);
 
     const [showThemeModal, setShowThemeModal] = useState(false);
     const themeModalRef = useRef(null);
@@ -397,28 +294,12 @@ export default function TaskApp() {
             // Monster defeated!
             setIsMonsterDefeated(true);
             playDefeatSound();
-            // Unlock theme for the monster just defeated (current monster)
-            const shouldUnlockTheme = (monsterId % 5 === 0 || monsterId === 1) && !unlockedThemes.includes(monsterId);
-            if (shouldUnlockTheme) {
-                setUnlockedThemes([...unlockedThemes, monsterId]);
-                playThemeUnlockSound();
-            }
             setTimeout(() => {
                 const nextMonster = getNextMonster(monsterId);
                 if (nextMonster) {
                     setMonsterId(nextMonster.id);
                     setMonsterHealth(nextMonster.health);
                     setIsMonsterDefeated(false);
-                    // Special milestone messages
-                    if (nextMonster.id === 50) {
-                        alert(`🎉 MILESTONE! You defeated the ${monster.name}! Ancient Dragon theme unlocked! 🌟`);
-                    } else if (nextMonster.id === 100) {
-                        alert(`🏆 ULTIMATE ACHIEVEMENT! You defeated the ${monster.name}! Cosmic Devourer theme unlocked! ⭐`);
-                    } else if (shouldUnlockTheme) {
-                        alert(`You defeated the ${monster.name}! New theme unlocked!`);
-                    } else {
-                        alert(`You defeated the ${monster.name}!`);
-                    }
                 } else {
                     // All monsters defeated!
                     alert(`🎊 CONGRATULATIONS! You've defeated all 100 monsters! You are the ultimate task master! 🏆`);
@@ -525,9 +406,9 @@ export default function TaskApp() {
                 </div>
             </div>
         );
-    }
+    };
 
-    // Memoized task component to prevent unnecessary re-renders
+    // Task Item Component
     const TaskItem = React.memo(({ task }) => {
         const [isEditing, setIsEditing] = useState(false);
         const [editData, setEditData] = useState({
@@ -539,7 +420,6 @@ export default function TaskApp() {
 
         const handleSave = async () => {
             if (!editData.task.trim()) return;
-            setLoading(true);
             const updatedTaskObj = {
                 task: editData.task,
                 priority: editData.priority,
@@ -561,8 +441,6 @@ export default function TaskApp() {
                     setIsEditing(false);
                 } catch (err) {
                     setError("Failed to update task. Please try again.");
-                } finally {
-                    setLoading(false);
                 }
             } else {
                 setTasks(tasks.map(t => t.id === task.id ? { ...t, ...updatedTaskObj } : t));
@@ -571,7 +449,6 @@ export default function TaskApp() {
                 savePending(pending);
                 setIsEditing(false);
                 setError("(Offline) Edit will sync when online.");
-                setLoading(false);
             }
         };
 
@@ -642,6 +519,43 @@ export default function TaskApp() {
             );
         }
 
+        const handleCompleteTask = async (id) => {
+            const taskToComplete = tasks.find(t => t.id === id);
+            if (!taskToComplete) return;
+            
+            const updatedTask = { ...taskToComplete, completed: !taskToComplete.completed };
+            
+            if (navigator.onLine) {
+                try {
+                    const res = await fetch(`${API_URL}/${id}`, {
+                        method: 'PUT',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify(updatedTask)
+                    });
+                    if (!res.ok) throw new Error('Failed to update task');
+                    const data = await res.json();
+                    setTasks(tasks.map(t => t.id === id ? data : t));
+                    
+                    // Monster battle logic when task is completed
+                    if (updatedTask.completed) {
+                        handleMonsterAttack();
+                    }
+                } catch (err) {
+                    setError('Failed to update task status');
+                }
+            } else {
+                setTasks(tasks.map(t => t.id === id ? updatedTask : t));
+                const pending = getPending();
+                pending.push({ type: 'edit', id, task: updatedTask });
+                savePending(pending);
+                setError('(Offline) Task status will sync when online');
+                
+                if (updatedTask.completed) {
+                    handleMonsterAttack();
+                }
+            }
+        };
+
         return (
             <motion.li
                 animate={{ opacity: 1, y: 0 }}
@@ -690,6 +604,34 @@ export default function TaskApp() {
     function renderTask(task) {
         return <TaskItem key={task.id} task={task} />;
     }
+
+    // Add the missing handleMonsterAttack function
+    const handleMonsterAttack = () => {
+        setMonsterHealth(prev => {
+            const newHealth = Math.max(0, prev - 1);
+            if (newHealth <= 0) {
+                // Monster defeated!
+                setIsMonsterDefeated(true);
+                playDefeatSound();
+                setTimeout(() => {
+                    const nextMonster = getNextMonster(monsterId);
+                    if (nextMonster) {
+                        setMonsterId(nextMonster.id);
+                        setMonsterHealth(nextMonster.health);
+                        setIsMonsterDefeated(false);
+                    } else {
+                        // All monsters defeated!
+                        alert(`🎊 CONGRATULATIONS! You've defeated all monsters! You are the ultimate task master! 🏆`);
+                    }
+                }, 1000);
+                return 0;
+            }
+            return newHealth;
+        });
+        setIsMonsterHit(true);
+        playHitSound();
+        setTimeout(() => setIsMonsterHit(false), 300);
+    };
 
     // Theme classes
     const theme = currentTheme === -1 ? DEFAULT_THEME : getMonsterById(currentTheme)?.theme || DEFAULT_THEME;
