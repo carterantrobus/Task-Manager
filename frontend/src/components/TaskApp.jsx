@@ -31,6 +31,10 @@ export default function TaskApp() {
     const [filter, setFilter] = useState("all");
     const [searchTerm, setSearchTerm] = useState("");
     const [editingTaskId, setEditingTaskId] = useState(null);
+    const [editInput, setEditInput] = useState("");
+    const [editPriority, setEditPriority] = useState("medium");
+    const [editStatus, setEditStatus] = useState("To Do");
+    const [editDueDate, setEditDueDate] = useState("");
     const [status, setStatus] = useState("To Do");
     const [dueDate, setDueDate] = useState("");
     const [view, setView] = useState('list');
@@ -179,10 +183,10 @@ export default function TaskApp() {
         setEditingTaskId(id);
         const taskToEdit = tasks.find(task => task.id === id);
         if (taskToEdit) {
-            setInput(taskToEdit.task);
-            setPriority(taskToEdit.priority);
-            setStatus(taskToEdit.status || "To Do");
-            setDueDate(taskToEdit.dueDate ? taskToEdit.dueDate.slice(0, 10) : "");
+            setEditInput(taskToEdit.task);
+            setEditPriority(taskToEdit.priority);
+            setEditStatus(taskToEdit.status || "To Do");
+            setEditDueDate(taskToEdit.dueDate ? taskToEdit.dueDate.slice(0, 10) : "");
         }
     };
 
@@ -561,13 +565,13 @@ export default function TaskApp() {
                 {editingTaskId === task.id ? (
                     <div className="flex flex-wrap items-center gap-2 w-full">
                         <input
-                            value={input}
-                            onChange={e => setInput(e.target.value)}
+                            value={editInput}
+                            onChange={e => setEditInput(e.target.value)}
                             className="flex-1 min-w-[120px] px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                         <select
-                            value={priority}
-                            onChange={(e) => setPriority(e.target.value)}
+                            value={editPriority}
+                            onChange={(e) => setEditPriority(e.target.value)}
                             className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             <option value="low">Low</option>
@@ -575,16 +579,16 @@ export default function TaskApp() {
                             <option value="high">High</option>
                         </select>
                         <select
-                            value={status}
-                            onChange={e => setStatus(e.target.value)}
+                            value={editStatus}
+                            onChange={e => setEditStatus(e.target.value)}
                             className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                         </select>
                         <input
                             type="date"
-                            value={dueDate}
-                            onChange={e => setDueDate(e.target.value)}
+                            value={editDueDate}
+                            onChange={e => setEditDueDate(e.target.value)}
                             className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                         <button
@@ -883,6 +887,9 @@ export default function TaskApp() {
         </div>
     );
 }
+
+
+
 
 
 
