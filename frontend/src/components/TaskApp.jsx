@@ -32,6 +32,7 @@ export default function TaskApp() {
     const [searchTerm, setSearchTerm] = useState("");
     const [status, setStatus] = useState("To Do");
     const [dueDate, setDueDate] = useState("");
+    const [dueTime, setDueTime] = useState("");
     const [view, setView] = useState('list');
     const [calendarDate, setCalendarDate] = useState(new Date());
 
@@ -98,11 +99,20 @@ export default function TaskApp() {
         e.preventDefault();
         if (!input.trim()) return;
         setLoading(true);
+        // Combine date and time into ISO string if provided
+        let dueDateTime = null;
+        if (dueDate) {
+            if (dueTime) {
+                dueDateTime = new Date(`${dueDate}T${dueTime}`).toISOString();
+            } else {
+                dueDateTime = new Date(`${dueDate}T00:00`).toISOString();
+            }
+        }
         const newTaskObj = {
             task: input,
             priority,
             status,
-            dueDate: null,
+            dueDate: dueDateTime,
             createdAt: new Date().toISOString()
         };
         if (navigator.onLine) {
@@ -118,6 +128,8 @@ export default function TaskApp() {
                 setInput("");
                 setPriority("medium");
                 setStatus("To Do");
+                setDueDate("");
+                setDueTime("");
 
                 setError("");
             } catch (err) {
@@ -135,6 +147,8 @@ export default function TaskApp() {
             setInput("");
             setPriority("medium");
             setStatus("To Do");
+            setDueDate("");
+            setDueTime("");
             setError("(Offline) Task will sync when online.");
             setLoading(false);
         }
@@ -854,6 +868,12 @@ export default function TaskApp() {
                             type="date"
                             value={dueDate}
                             onChange={e => setDueDate(e.target.value)}
+                            className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100"
+                        />
+                        <input
+                            type="time"
+                            value={dueTime}
+                            onChange={e => setDueTime(e.target.value)}
                             className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100"
                         />
                         <button 
