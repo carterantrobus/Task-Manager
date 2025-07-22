@@ -183,21 +183,21 @@ export default function TaskApp() {
         setEditingTaskId(id);
         const taskToEdit = tasks.find(task => task.id === id);
         if (taskToEdit) {
-            setEditInput(taskToEdit.task);
-            setEditPriority(taskToEdit.priority);
-            setEditStatus(taskToEdit.status || "To Do");
-            setEditDueDate(taskToEdit.dueDate ? taskToEdit.dueDate.slice(0, 10) : "");
+            setInput(taskToEdit.task);
+            setPriority(taskToEdit.priority);
+            setStatus(taskToEdit.status || "To Do");
+            setDueDate(taskToEdit.dueDate ? taskToEdit.dueDate.slice(0, 10) : "");
         }
     };
 
     const saveEdit = async () => {
-        if (!input.trim()) return;
+        if (!editInput.trim()) return;
         setLoading(true);
         const updatedTaskObj = {
-            task: input,
-            priority,
-            status,
-            dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+            task: editInput,
+            priority: editPriority,
+            status: editStatus,
+            dueDate: editDueDate ? new Date(editDueDate).toISOString() : null,
             completed: tasks.find(t => t.id === editingTaskId)?.completed || false
         };
         if (navigator.onLine) {
@@ -211,10 +211,10 @@ export default function TaskApp() {
                 const updatedTask = await res.json();
                 setTasks(tasks.map(t => t.id === editingTaskId ? updatedTask : t));
                 setEditingTaskId(null);
-                setInput("");
-                setPriority("medium");
-                setStatus("To Do");
-                setDueDate("");
+                setEditInput("");
+                setEditPriority("medium");
+                setEditStatus("To Do");
+                setEditDueDate("");
                 setError("");
             } catch (err) {
                 setError("Failed to update task. Please try again.");
@@ -228,10 +228,10 @@ export default function TaskApp() {
             pending.push({ type: 'edit', id: editingTaskId, task: updatedTaskObj });
             savePending(pending);
             setEditingTaskId(null);
-            setInput("");
-            setPriority("medium");
-            setStatus("To Do");
-            setDueDate("");
+            setEditInput("");
+            setEditPriority("medium");
+            setEditStatus("To Do");
+            setEditDueDate("");
             setError("(Offline) Edit will sync when online.");
             setLoading(false);
         }
@@ -368,6 +368,7 @@ export default function TaskApp() {
 
     const [showThemeModal, setShowThemeModal] = useState(false);
     const themeModalRef = useRef(null);
+    const editInputRef = useRef(null);
 
     // Close modal on outside click
     useEffect(() => {
@@ -547,10 +548,11 @@ export default function TaskApp() {
     }
 
     // RenderTask helper to keep task rendering logic DRY
-    function renderTask(task) {
+    const renderTask = useCallback((task) => {
         return (
             <motion.li
                 key={task.id}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -100 }}
                 className={`${priorityColors[task.priority]} p-4 rounded-lg border flex items-center gap-4 transition-all duration-200`}
@@ -565,13 +567,16 @@ export default function TaskApp() {
                 {editingTaskId === task.id ? (
                     <div className="flex flex-wrap items-center gap-2 w-full">
                         <input
+                            ref={editInputRef}
+                            key={`edit-${editingTaskId}`}
                             value={editInput}
                             onChange={e => setEditInput(e.target.value)}
                             className="flex-1 min-w-[120px] px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            autoFocus
                         />
                         <select
-                            value={editPriority}
-                            onChange={(e) => setEditPriority(e.target.value)}
+                            value={priority}
+                            onChange={(e) => setPriority(e.target.value)}
                             className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             <option value="low">Low</option>
@@ -579,16 +584,16 @@ export default function TaskApp() {
                             <option value="high">High</option>
                         </select>
                         <select
-                            value={editStatus}
-                            onChange={e => setEditStatus(e.target.value)}
+                            value={status}
+                            onChange={e => setStatus(e.target.value)}
                             className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                         </select>
                         <input
                             type="date"
-                            value={editDueDate}
-                            onChange={e => setEditDueDate(e.target.value)}
+                            value={dueDate}
+                            onChange={e => setDueDate(e.target.value)}
                             className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                         <button
@@ -641,7 +646,7 @@ export default function TaskApp() {
                 )}
             </motion.li>
         );
-    }
+    }, [editingTaskId, editInput, editPriority, editStatus, editDueDate, loading]);
 
     // Theme classes
     const theme = currentTheme === -1 ? DEFAULT_THEME : getMonsterById(currentTheme)?.theme || DEFAULT_THEME;
@@ -887,6 +892,7 @@ export default function TaskApp() {
         </div>
     );
 }
+
 
 
 
