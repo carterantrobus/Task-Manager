@@ -33,6 +33,14 @@ export default function TaskApp() {
     const [editingTaskId, setEditingTaskId] = useState(null);
     const [status, setStatus] = useState("To Do");
     const [dueDate, setDueDate] = useState("");
+    
+    // Separate state for edit form
+    const [editFormData, setEditFormData] = useState({
+        task: "",
+        priority: "medium",
+        status: "To Do",
+        dueDate: ""
+    });
     const [view, setView] = useState('list');
     const [calendarDate, setCalendarDate] = useState(new Date());
 
@@ -179,21 +187,23 @@ export default function TaskApp() {
         setEditingTaskId(id);
         const taskToEdit = tasks.find(task => task.id === id);
         if (taskToEdit) {
-            setInput(taskToEdit.task);
-            setPriority(taskToEdit.priority);
-            setStatus(taskToEdit.status || "To Do");
-            setDueDate(taskToEdit.dueDate ? taskToEdit.dueDate.slice(0, 10) : "");
+            setEditFormData({
+                task: taskToEdit.task,
+                priority: taskToEdit.priority,
+                status: taskToEdit.status || "To Do",
+                dueDate: taskToEdit.dueDate ? taskToEdit.dueDate.slice(0, 10) : ""
+            });
         }
     };
 
     const saveEdit = async () => {
-        if (!input.trim()) return;
+        if (!editFormData.task.trim()) return;
         setLoading(true);
         const updatedTaskObj = {
-            task: input,
-            priority,
-            status,
-            dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+            task: editFormData.task,
+            priority: editFormData.priority,
+            status: editFormData.status,
+            dueDate: editFormData.dueDate ? new Date(editFormData.dueDate).toISOString() : null,
             completed: tasks.find(t => t.id === editingTaskId)?.completed || false
         };
         if (navigator.onLine) {
@@ -536,13 +546,13 @@ export default function TaskApp() {
                 {editingTaskId === task.id ? (
                     <div className="flex flex-wrap items-center gap-2 w-full">
                         <input
-                            value={input}
-                            onChange={e => setInput(e.target.value)}
+                            value={editFormData.task}
+                            onChange={e => setEditFormData(prev => ({ ...prev, task: e.target.value }))}
                             className="flex-1 min-w-[120px] px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                         <select
-                            value={priority}
-                            onChange={(e) => setPriority(e.target.value)}
+                            value={editFormData.priority}
+                            onChange={e => setEditFormData(prev => ({ ...prev, priority: e.target.value }))}
                             className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             <option value="low">Low</option>
@@ -550,16 +560,16 @@ export default function TaskApp() {
                             <option value="high">High</option>
                         </select>
                         <select
-                            value={status}
-                            onChange={e => setStatus(e.target.value)}
+                            value={editFormData.status}
+                            onChange={e => setEditFormData(prev => ({ ...prev, status: e.target.value }))}
                             className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                         </select>
                         <input
                             type="date"
-                            value={dueDate}
-                            onChange={e => setDueDate(e.target.value)}
+                            value={editFormData.dueDate}
+                            onChange={e => setEditFormData(prev => ({ ...prev, dueDate: e.target.value }))}
                             className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                         <button
