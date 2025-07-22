@@ -341,6 +341,12 @@ export default function TaskApp() {
             // Monster defeated!
             setIsMonsterDefeated(true);
             playDefeatSound();
+
+            // Unlock theme if not already unlocked
+            if (!unlockedThemes.includes(monsterId)) {
+                setUnlockedThemes([...unlockedThemes, monsterId]);
+            }
+
             setTimeout(() => {
                 const nextMonster = getNextMonster(monsterId);
                 if (nextMonster) {
