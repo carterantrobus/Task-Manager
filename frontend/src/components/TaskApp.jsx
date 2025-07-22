@@ -548,7 +548,7 @@ export default function TaskApp() {
     }
 
     // RenderTask helper to keep task rendering logic DRY
-    const renderTask = useCallback((task) => {
+    const renderTask = (task) => {
         return (
             <motion.li
                 key={task.id}
@@ -646,7 +646,7 @@ export default function TaskApp() {
                 )}
             </motion.li>
         );
-    }, [editingTaskId, editInput, editPriority, editStatus, editDueDate, loading, deleteTask, handleCompleteTask, handleEdit, saveEdit]);
+    };
 
     // Theme classes
     const theme = currentTheme === -1 ? DEFAULT_THEME : getMonsterById(currentTheme)?.theme || DEFAULT_THEME;
@@ -892,6 +892,9 @@ export default function TaskApp() {
         </div>
     );
 }
+
+
+
 
 
 
