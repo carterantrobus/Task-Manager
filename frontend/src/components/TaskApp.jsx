@@ -30,11 +30,14 @@ export default function TaskApp() {
     const [filter, setFilter] = useState("all");
     const [searchTerm, setSearchTerm] = useState("");
     const [status, setStatus] = useState("To Do");
+    const [dueDate, setDueDate] = useState("");
     const [view, setView] = useState('list');
     const [calendarDate, setCalendarDate] = useState(new Date());
 
     const [monsterId, setMonsterId] = useState(1);
     const [monsterHealth, setMonsterHealth] = useState(MONSTERS[0].health);
+    const [unlockedThemes, setUnlockedThemes] = useState([-1]); // -1 for default theme
+    const [currentTheme, setCurrentTheme] = useState(-1); // -1 for default blue
     const [isMonsterHit, setIsMonsterHit] = useState(false);
     const [isMonsterDefeated, setIsMonsterDefeated] = useState(false);
     const monster = getMonsterById(monsterId);
