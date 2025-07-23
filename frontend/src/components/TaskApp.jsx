@@ -408,9 +408,9 @@ export default function TaskApp() {
     function BoardView({ tasks, ...props }) {
         const statuses = statusOptions;
         return (
-            <div className="flex gap-4 overflow-x-auto">
+            <div className="flex flex-col md:flex-row gap-4 overflow-x-auto">
                 {statuses.map(status => (
-                    <div key={status} className="flex-1 min-w-[220px] bg-gray-100 rounded-md p-2">
+                    <div key={status} className="flex-1 min-w-[220px] bg-gray-100 rounded-md p-2 flex flex-col">
                         <h3 className="font-bold text-center mb-2">{status}</h3>
                         {tasks.filter(t => t.status === status).length === 0 ? (
                             <div className="text-gray-400 text-center">No tasks</div>
@@ -614,7 +614,7 @@ export default function TaskApp() {
             <motion.li
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -100 }}
-                className={`${priorityColors[task.priority]} p-4 rounded-lg border flex items-center gap-4 transition-all duration-200`}
+                className={`${priorityColors[task.priority]} p-4 rounded-lg border flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 transition-all duration-200 min-w-0`}
             >
                 <input
                     type="checkbox"
