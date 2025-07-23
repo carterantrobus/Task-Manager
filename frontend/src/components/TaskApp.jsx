@@ -410,7 +410,7 @@ export default function TaskApp() {
         return (
             <div className="flex flex-col md:flex-row gap-4 overflow-x-auto">
                 {statuses.map(status => (
-                    <div key={status} className="flex-1 min-w-[220px] bg-gray-100 rounded-md p-2 flex flex-col">
+                    <div key={status} className="flex-1 min-w-[320px] md:min-w-[400px] bg-gray-100 rounded-md p-2 flex flex-col">
                         <h3 className="font-bold text-center mb-2">{status}</h3>
                         {tasks.filter(t => t.status === status).length === 0 ? (
                             <div className="text-gray-400 text-center">No tasks</div>
@@ -614,7 +614,7 @@ export default function TaskApp() {
             <motion.li
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -100 }}
-                className={`${priorityColors[task.priority]} p-4 rounded-lg border flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 transition-all duration-200 min-w-0`}
+                className={`${priorityColors[task.priority]} p-4 rounded-lg border flex flex-row flex-wrap items-center gap-4 transition-all duration-200 min-w-0 w-full text-center min-h-28 md:min-h-32`}
             >
                 <input
                     type="checkbox"
@@ -623,22 +623,15 @@ export default function TaskApp() {
                     className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     disabled={task.completed}
                 />
-                <span className={`flex-1 ${task.completed ? 'line-through text-gray-500' : ''}`}>
-                    {task.task}
+                <span className={`flex-1 min-w-0 break-words ${task.completed ? 'line-through text-gray-500' : ''}`}>{task.task}</span>
+                <span className="text-sm text-gray-500 truncate max-w-[6rem]">{task.priority}</span>
+                <span className="text-sm text-gray-500 truncate max-w-[8rem]">{task.status || "To Do"}</span>
+                <span className="text-sm text-gray-500 truncate max-w-[12rem]">
+                    {task.dueDate ? (() => {
+                        const [date, time] = task.dueDate.split('T');
+                        return `${date} ${time}`;
+                    })() : "No due date"}
                 </span>
-                <span className="text-sm text-gray-500">
-                    {task.priority}
-                </span>
-                <span className="text-sm text-gray-500">
-                    {task.status || "To Do"}
-                </span>
-                <span className="text-sm text-gray-500">
-    {task.dueDate ? (() => {
-        // Parse local 'YYYY-MM-DDTHH:mm' string
-        const [date, time] = task.dueDate.split('T');
-        return `${date} ${time}`;
-    })() : "No due date"}
-</span>
                 <button
                     onClick={() => setIsEditing(true)}
                     className={`text-blue-500 hover:text-blue-700 transition-colors duration-200 ${task.status === 'Done' ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -662,7 +655,9 @@ export default function TaskApp() {
 
     // RenderTask helper to keep task rendering logic DRY
     function renderTask(task) {
-        return <TaskItem key={task.id} task={task} onComplete={handleCompleteTask} />;
+        // Centered and larger only for Board and Status views
+        const isBoardOrStatus = view === 'board' || view === 'status';
+        return <TaskItem key={task.id} task={task} onComplete={handleCompleteTask} isLarge={isBoardOrStatus} />;
     }
 
     // Add the missing handleMonsterAttack function
