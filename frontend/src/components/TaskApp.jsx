@@ -577,6 +577,13 @@ export default function TaskApp() {
                             onChange={e => setEditData(prev => ({ ...prev, dueDate: e.target.value }))}
                             className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
+                        <input
+                            type="time"
+                            value={editData.dueTime}
+                            onChange={e => setEditData(prev => ({ ...prev, dueTime: e.target.value }))}
+                            className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required={!!editData.dueDate}
+                        />
                         <button
                             onClick={handleSave}
                             className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 font-semibold"
