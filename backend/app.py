@@ -6,8 +6,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from .models import db, User, Task
-from auth import create_user, authenticate_user, get_current_user
-from email_utils import send_email
+from .auth import create_user, authenticate_user, get_current_user
+from .email_utils import send_email
 import secrets
 from .models import PasswordResetToken
 

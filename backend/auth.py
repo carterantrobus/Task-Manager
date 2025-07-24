@@ -1,6 +1,6 @@
 import bcrypt
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
-from models import User, db
+from .models import User, db
 import re
 
 def hash_password(password):
