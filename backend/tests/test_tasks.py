@@ -6,19 +6,19 @@ import json
 # Added the project root to the module search path so app.py is importable
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))) 
 
-from backend.app import app
-from backend.models import db, User, Task
+from backend.app import app, db
+from backend.models import User, Task
 
 @pytest.fixture
 def client():
     app.config["TESTING"] = True
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-    
-    with app.test_client() as client:
-        with app.app_context():
-            db.create_all()
+    with app.app_context():
+        db.create_all()
+        with app.test_client() as client:
             yield client
-            db.drop_all()
+        db.session.remove()
+        db.drop_all()
 
 @pytest.fixture
 def auth_headers(client):
@@ -246,3 +246,4 @@ def test_unauthorized_access(client):
 def test_unauthorized_add_task(client):
     response = client.post("/tasks", json={"task": "Test Task"})
     assert response.status_code == 401
+

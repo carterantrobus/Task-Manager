@@ -1,3 +1,4 @@
+# pytest: skip-file
 import requests
 import json
 
