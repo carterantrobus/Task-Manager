@@ -22,8 +22,22 @@ def validate_username(username):
     return re.match(pattern, username) is not None
 
 def validate_password(password):
-    """Validate password strength (at least 6 characters)"""
-    return len(password) >= 6
+    """Validate password strength.
+    Requirements:
+    - At least 12 characters
+    - Includes at least 1 lowercase, 1 uppercase, 1 digit, and 1 special character
+    """
+    if len(password) < 12:
+        return False
+    if not re.search(r"[a-z]", password):
+        return False
+    if not re.search(r"[A-Z]", password):
+        return False
+    if not re.search(r"\d", password):
+        return False
+    if not re.search(r"[^A-Za-z0-9]", password):
+        return False
+    return True
 
 def create_user(username, email, password):
     """Create a new user"""
@@ -35,7 +49,7 @@ def create_user(username, email, password):
         raise ValueError("Invalid email format")
     
     if not validate_password(password):
-        raise ValueError("Password must be at least 6 characters long")
+        raise ValueError("Password must be at least 12 characters long and include lowercase, uppercase, digit, and special character")
     
     # Check if username or email already exists
     if User.query.filter_by(username=username).first():

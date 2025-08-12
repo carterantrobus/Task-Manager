@@ -1,0 +1,33 @@
+# Exclude VCS
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+*.log
+
+# Env files and secrets
+.env
+.env.*
+*.pem
+*.ppk
+*.key
+*.crt
+instance/*.db
+
+# Tests and local artifacts
+tests/
+.coverage
+.pytest_cache/
+
+# Node and frontend (if any copied)
+node_modules/
+
+# Docker
+Dockerfile*

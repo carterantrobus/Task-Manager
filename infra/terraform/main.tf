@@ -14,23 +14,26 @@ data "aws_vpc" "default" {
 }
 
 resource "aws_security_group" "task_manager_sg" {
-    name       = "task_manager_sg"
-    description = "Allow SSH and HTTP access"
+    name        = "task_manager_sg"
+    description = "Allow limited access to EC2 instance"
+    vpc_id      = data.aws_vpc.default.id
 
+    # SSH restricted (override via variable)
     ingress {
         description = "SSH access"
         from_port   = 22
         to_port     = 22
         protocol    = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]
+        cidr_blocks = [var.ssh_allowed_cidr]
     }
 
+    # App traffic only from ALB security group
     ingress {
-        description = "HTTP"
-        from_port   = 5000
-        to_port     = 5000
-        protocol    = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]
+        description     = "App from ALB"
+        from_port       = 5000
+        to_port         = 5000
+        protocol        = "tcp"
+        security_groups = [aws_security_group.alb_sg.id]
     }
 
     egress {
@@ -43,6 +46,82 @@ resource "aws_security_group" "task_manager_sg" {
     tags = {
         Name = "TaskManagerSG"
     }
+}
+
+# Application Load Balancer and related resources
+resource "aws_security_group" "alb_sg" {
+  name        = "task-manager-alb-sg"
+  description = "Allow HTTP/HTTPS to ALB"
+  vpc_id      = data.aws_vpc.default.id
+
+  ingress {
+    description = "HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "TaskManagerALBSG"
+  }
+}
+
+resource "aws_lb" "app_alb" {
+  name               = "task-manager-alb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.alb_sg.id]
+  subnets            = data.aws_subnets.default.ids
+
+  tags = {
+    Name = "TaskManagerALB"
+  }
+}
+
+resource "aws_lb_target_group" "app_tg" {
+  name     = "task-manager-tg"
+  port     = 5000
+  protocol = "HTTP"
+  vpc_id   = data.aws_vpc.default.id
+
+  health_check {
+    protocol            = "HTTP"
+    path                = var.health_check_path
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 5
+    interval            = 30
+    matcher             = "200-399"
+  }
+
+  tags = {
+    Name = "TaskManagerTG"
+  }
+}
+
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.app_alb.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.app_tg.arn
+  }
+}
+
+resource "aws_lb_target_group_attachment" "instance" {
+  target_group_arn = aws_lb_target_group.app_tg.arn
+  target_id        = aws_instance.task_manager.id
+  port             = 5000
 }
 
 # S3 bucket for frontend static site

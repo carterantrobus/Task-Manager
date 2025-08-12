@@ -1,29 +1,68 @@
 import os
-from dotenv import load_dotenv
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
 from datetime import datetime, timedelta
+import secrets
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    create_refresh_token,
+    jwt_required,
+    get_jwt_identity,
+)
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from .models import db, User, Task
 from .auth import create_user, authenticate_user, get_current_user
 from .email_utils import send_email
-import secrets
 from .models import PasswordResetToken
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 
 # Configuration
-# Use PostgreSQL if POSTGRES_URI is set, otherwise fallback to SQLite (for dev/testing)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('POSTGRES_URI', 'sqlite:///tasks.db')
+APP_ENV = os.environ.get('APP_ENV', 'development').lower()
+
+# Load .env only for non-production to aid local development
+if APP_ENV != 'production':
+    env_path = os.path.join(os.path.dirname(__file__), '.env')
+    if os.path.exists(env_path):
+        load_dotenv(dotenv_path=env_path)
+
+# Database configuration: require POSTGRES_URI in production, allow sqlite fallback in dev/test
+if APP_ENV == 'production':
+    postgres_uri = os.environ.get('POSTGRES_URI')
+    if not postgres_uri:
+        raise RuntimeError('POSTGRES_URI must be set in production')
+    app.config['SQLALCHEMY_DATABASE_URI'] = postgres_uri
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('POSTGRES_URI', 'sqlite:///tasks.db')
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'your-secret-key-change-in-production')
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
+
+# Require JWT secret key. Fail fast if missing.
+jwt_secret = os.environ.get('JWT_SECRET_KEY')
+if not jwt_secret:
+    raise RuntimeError('JWT_SECRET_KEY must be set')
+app.config['JWT_SECRET_KEY'] = jwt_secret
+
+# Shorter access token lifetime and enable refresh tokens
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=2)
+app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=7)
 
 # Initialize extensions
-CORS(app)
+# Tighten CORS for production by restricting to configured frontend origin
+frontend_origin = os.environ.get('FRONTEND_ORIGIN')
+if APP_ENV == 'production' and frontend_origin:
+    CORS(app, resources={r"/*": {"origins": [frontend_origin]}})
+else:
+    CORS(app)
+
 db.init_app(app)
 jwt = JWTManager(app)
+
+# Rate limiting
+limiter = Limiter(get_remote_address, app=app, default_limits=["200 per day", "50 per hour"])
 
 # Create database tables
 with app.app_context():
@@ -32,6 +71,11 @@ with app.app_context():
 @app.errorhandler(500)
 def server_error(e):
     return jsonify({"error": "Something went wrong"}), 500
+
+# Liveness/health check endpoint for load balancers
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({"status": "ok"}), 200
 
 # Authentication endpoints
 @app.route('/auth/register', methods=['POST'])
@@ -51,9 +95,11 @@ def register():
     try:
         user = create_user(username, email, password)
         access_token = create_access_token(identity=user.id)
+        refresh_token = create_refresh_token(identity=user.id)
         return jsonify({
             "message": "User created successfully",
             "access_token": access_token,
+            "refresh_token": refresh_token,
             "user": {
                 "id": user.id,
                 "username": user.username,
@@ -64,6 +110,7 @@ def register():
         return jsonify({"error": str(e)}), 400
 
 @app.route('/auth/login', methods=['POST'])
+@limiter.limit("5 per minute")
 def login():
     try:
         data = request.get_json(force=True)
@@ -79,9 +126,11 @@ def login():
     user = authenticate_user(identifier, password)
     if user:
         access_token = create_access_token(identity=user.id)
+        refresh_token = create_refresh_token(identity=user.id)
         return jsonify({
             "message": "Login successful",
             "access_token": access_token,
+            "refresh_token": refresh_token,
             "user": {
                 "id": user.id,
                 "username": user.username,
@@ -106,6 +155,7 @@ def get_profile():
     }), 200
 
 @app.route('/auth/request-password-reset', methods=['POST'])
+@limiter.limit("3 per minute")
 def request_password_reset():
     try:
         data = request.get_json(force=True)
@@ -136,6 +186,7 @@ def request_password_reset():
     return jsonify({"message": "If an account with that email exists, a password reset link has been sent."}), 200
 
 @app.route('/auth/reset-password', methods=['POST'])
+@limiter.limit("3 per minute")
 def reset_password():
     try:
         data = request.get_json(force=True)
@@ -159,11 +210,19 @@ def reset_password():
         return jsonify({"error": "User not found"}), 404
 
     # Update password
-    from auth import hash_password
+    from .auth import hash_password
     user.password_hash = hash_password(new_password)
     reset_token.used = True
     db.session.commit()
     return jsonify({"message": "Password has been reset successfully."}), 200
+
+# Refresh token endpoint
+@app.route('/auth/refresh', methods=['POST'])
+@jwt_required(refresh=True)
+def refresh_access_token():
+    identity = get_jwt_identity()
+    access_token = create_access_token(identity=identity)
+    return jsonify({"access_token": access_token}), 200
 
 # Task endpoints (now require authentication)
 @app.route('/tasks', methods=['GET'])
