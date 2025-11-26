@@ -1,5 +1,0 @@
-aws_region = "ca-central-1"
-instance_type = "t3.micro"
-key_name = "task-manager-key"
-frontend_bucket_name = "scalable-task-manager-frontend-bucket"
-db_password = "39Antro91203+"
