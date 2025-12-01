@@ -5,7 +5,6 @@ A full-stack, gamified task management application built with React and Flask, f
 ## Live Demo
 
 - **Frontend:** [https://monstager.xyz](https://monstager.xyz)
-- **Backend API:** [https://api.monstager.xyz](https://api.monstager.xyz)
 
 ## Features
 
