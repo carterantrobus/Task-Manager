@@ -6,8 +6,7 @@ A full-stack, gamified task management application built with React and Flask, f
 
 - **Frontend:** [https://monstager.xyz](https://monstager.xyz)
 
-[Watch Demo Video](https://github.com/carterantrobus/Task-Manager/raw/main/frontend/public/assets/Task-Manager-Demo.mp4)
-
+<video src="./frontend/public/assets/Task-Manager-Demo.mp4"></video>
 
 ## Features
 
