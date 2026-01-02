@@ -6,10 +6,7 @@ A full-stack, gamified task management application built with React and Flask, f
 
 - **Frontend:** [https://monstager.xyz](https://monstager.xyz)
 
-📹 [Download/View Demo Video](https://github.com/carterantrobus/Scalable-Task-Manager/raw/main/frontend/public/assets/Task-Manager-Demo.mp4)
-
-> **Note:** GitHub doesn't support inline video playback in README files. The link above will allow you to view/download the video. For better embedding, consider hosting on YouTube/Vimeo and embedding, or converting to an animated GIF (which GitHub does support in markdown).
-
+https://github.com/carterantrobus/Task-Manager/blob/main/frontend/public/assets/Task-Manager-Demo.mp4
 
 ## Features
 
@@ -62,14 +59,14 @@ A full-stack, gamified task management application built with React and Flask, f
 ## Deployment Architecture
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Frontend      │    │   Backend       │    │   Database      │
-│                 │    │                 │    │                 │
-│ Netlify CDN     │◄──►│ Nginx + Gunicorn│◄──►│ SQLite/PostgreSQL│
-│ monstager.xyz   │    │ api.monstager.xyz│   │                 │
-│                 │    │                 │    │                 │
-│ React App       │    │ Flask API       │    │ User Data       │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
+┌─────────────────┐    ┌─────────────────-┐    ┌─────────────────-┐
+│   Frontend      │    │   Backend        │    │   Database       │
+│                 │    │                  │    │                  │
+│ Netlify CDN     │◄──►│ Nginx + Gunicorn │◄──►│ SQLite/PostgreSQL│
+│ monstager.xyz   │    │ api.monstager.xyz│    │                  │
+│                 │    │                  │    │                  │
+│ React App       │    │ Flask API        │    │ User Data        │
+└─────────────────┘    └─────────────────-┘    └─────────────────-┘
 ```
 
 ## Installation & Setup
