@@ -169,30 +169,47 @@ def request_password_reset():
 
         user = User.query.filter_by(email=email).first()
         if user:
-            # Generate a secure token
-            token = secrets.token_urlsafe(48)
-            expires_at = datetime.utcnow() + timedelta(hours=1)
-            reset_token = PasswordResetToken(user_id=user.id, token=token, expires_at=expires_at)
-            db.session.add(reset_token)
-            db.session.commit()
-            # Build reset link using environment variable or default to production URL
-            frontend_url = os.environ.get('FRONTEND_URL', 'https://monstager.xyz')
-            reset_link = f"{frontend_url}/reset-password?token={token}"
-            subject = "Password Reset Request"
-            body = f"Hello {user.username},\n\nTo reset your password, click the link below (valid for 1 hour):\n{reset_link}\n\nIf you did not request this, you can ignore this email."
             try:
-                send_email(user.email, subject, body)
-            except Exception as e:
-                # Log the error but don't fail the request (security: don't reveal if email failed)
-                print(f"Failed to send password reset email: {e}")
+                # Generate a secure token
+                token = secrets.token_urlsafe(48)
+                expires_at = datetime.utcnow() + timedelta(hours=1)
+                reset_token = PasswordResetToken(user_id=user.id, token=token, expires_at=expires_at)
+                db.session.add(reset_token)
+                db.session.commit()
+                
+                # Build reset link using environment variable or default to production URL
+                frontend_url = os.environ.get('FRONTEND_URL', 'https://monstager.xyz')
+                reset_link = f"{frontend_url}/reset-password?token={token}"
+                subject = "Password Reset Request"
+                body = f"Hello {user.username},\n\nTo reset your password, click the link below (valid for 1 hour):\n{reset_link}\n\nIf you did not request this, you can ignore this email."
+                
+                # Try to send email, but don't fail if it doesn't work
+                try:
+                    send_email(user.email, subject, body)
+                except Exception as e:
+                    # Log the error but don't fail the request (security: don't reveal if email failed)
+                    print(f"Failed to send password reset email: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    # Continue anyway to avoid leaking information about email delivery status
+            except Exception as db_error:
+                # Rollback database transaction on error
+                db.session.rollback()
                 import traceback
                 traceback.print_exc()
-                # Continue anyway to avoid leaking information about email delivery status
+                # Log the error but still return success to avoid leaking user existence
+                print(f"Database error during password reset request: {db_error}")
+        
         # Always return success to avoid leaking user existence
         return jsonify({"message": "If an account with that email exists, a password reset link has been sent."}), 200
     except Exception as e:
         import traceback
         traceback.print_exc()
+        # Ensure session is rolled back on any error
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
         return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
 
 @app.route('/auth/reset-password', methods=['POST'])
