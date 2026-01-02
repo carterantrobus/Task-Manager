@@ -6,7 +6,9 @@ A full-stack, gamified task management application built with React and Flask, f
 
 - **Frontend:** [https://monstager.xyz](https://monstager.xyz)
 
-[Watch Demo Video](https://github.com/carterantrobus/Task-Manager/raw/main/frontend/public/assets/Task-Manager-Demo.mp4)
+📹 [Download/View Demo Video](https://github.com/carterantrobus/Scalable-Task-Manager/raw/main/frontend/public/assets/Task-Manager-Demo.mp4)
+
+> **Note:** GitHub doesn't support inline video playback in README files. The link above will allow you to view/download the video. For better embedding, consider hosting on YouTube/Vimeo and embedding, or converting to an animated GIF (which GitHub does support in markdown).
 
 
 ## Features
