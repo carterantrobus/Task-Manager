@@ -2,9 +2,11 @@
 
 A full-stack, gamified task management application built with React and Flask, featuring user authentication, offline support, and monster battle mechanics. Deployed with HTTPS, custom domains, and production-grade infrastructure.
 
-## Live Demo
+## Live/Video Demo
 
 - **Frontend:** [https://monstager.xyz](https://monstager.xyz)
+
+<video src="./frontend/public/assets/Task-Manager-Demo.mp4"></video>
 
 ## Features
 
@@ -22,13 +24,6 @@ A full-stack, gamified task management application built with React and Flask, f
 - **Milestone Achievements** - Special rewards at milestone monster defeats
 - **Sound Effects** - Audio feedback for actions and achievements
 - **Progress Tracking** - Persistent monster health and theme unlocks
-
-### Advanced Features
-- **Responsive Design** - Works on desktop, tablet, and mobile
-- **Dark/Light Mode** - Toggle between themes
-- **Offline Support** - Add/edit tasks offline, sync when back online
-- **Performance Optimized** - Fast loading with React optimizations
-- **Secure** - HTTPS, JWT authentication, CORS protection
 
 ## Tech Stack
 
@@ -125,7 +120,7 @@ A full-stack, gamified task management application built with React and Flask, f
    npm start
    ```
 
-### Production Deployment
+<!-- ### Production Deployment
 
 #### Backend (AWS EC2)
 1. **Launch EC2 instance** with Ubuntu
@@ -154,7 +149,7 @@ A full-stack, gamified task management application built with React and Flask, f
    sudo /path/to/venv/bin/gunicorn --chdir backend wsgi:app --bind 127.0.0.1:8000
    sudo systemctl start nginx
    sudo certbot --nginx -d api.monstager.xyz
-   ```
+   ``` 
 
 #### Frontend (Netlify)
 1. **Connect GitHub repository** to Netlify
@@ -164,7 +159,7 @@ A full-stack, gamified task management application built with React and Flask, f
    - Publish directory: `build`
 3. **Set environment variables:**
    - `REACT_APP_API_URL`: `https://api.monstager.xyz`
-4. **Deploy**
+4. **Deploy** -->
 
 ## API Endpoints
 
@@ -207,7 +202,7 @@ The application works offline with the following features:
 - **Local Storage** - Tasks cached in browser
 - **Pending Queue** - Changes queued when offline
 - **Auto-sync** - Automatic sync when connection restored
-- **Optimistic UI** - Immediate feedback for user actions
+<!-- - **Optimistic UI** - Immediate feedback for user actions -->
 
 ## Testing
 
@@ -229,13 +224,13 @@ npm test
 - **Database Indexing** - Optimized queries
 - **Caching** - Browser and server-side caching
 
-## Contributing
+<!-- ## Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/feature`)
 3. Commit your changes (`git commit -m 'Add feature'`)
 4. Push to the branch (`git push origin feature/feature`)
-5. Open a Pull Request
+5. Open a Pull Request -->
 
 ## License
 
