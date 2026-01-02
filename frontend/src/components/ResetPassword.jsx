@@ -22,8 +22,8 @@ export default function ResetPassword() {
       return;
     }
     // Strong password validation
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters long');
+    if (password.length < 12) {
+      setError('Password must be at least 12 characters long');
       return;
     }
     if (!/[A-Z]/.test(password)) {
@@ -114,7 +114,7 @@ export default function ResetPassword() {
               {/* Password strength feedback */}
               {password && (
                 <div className="text-xs mt-1 text-gray-600">
-                  Password must be at least 8 characters, include upper/lowercase, a number, and a special character.
+                  Password must be at least 12 characters, include upper/lowercase, a number, and a special character.
                 </div>
               )}
             </div>

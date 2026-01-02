@@ -158,63 +158,83 @@ def get_profile():
 @limiter.limit("3 per minute")
 def request_password_reset():
     try:
-        data = request.get_json(force=True)
-    except Exception:
-        return jsonify({"error": "Invalid JSON"}), 400
-
-    email = data.get('email', '').strip().lower()
-    if not email:
-        return jsonify({"error": "Email is required"}), 400
-
-    user = User.query.filter_by(email=email).first()
-    if user:
-        # Generate a secure token
-        token = secrets.token_urlsafe(48)
-        expires_at = datetime.utcnow() + timedelta(hours=1)
-        reset_token = PasswordResetToken(user_id=user.id, token=token, expires_at=expires_at)
-        db.session.add(reset_token)
-        db.session.commit()
-        # Build reset link (assume frontend at http://localhost:3000/reset-password)
-        reset_link = f"http://localhost:3000/reset-password?token={token}"
-        subject = "Password Reset Request"
-        body = f"Hello {user.username},\n\nTo reset your password, click the link below (valid for 1 hour):\n{reset_link}\n\nIf you did not request this, you can ignore this email."
         try:
-            send_email(user.email, subject, body)
-        except Exception as e:
-            print(f"Failed to send password reset email: {e}")
-    # Always return success to avoid leaking user existence
-    return jsonify({"message": "If an account with that email exists, a password reset link has been sent."}), 200
+            data = request.get_json(force=True)
+        except Exception:
+            return jsonify({"error": "Invalid JSON"}), 400
+
+        email = data.get('email', '').strip().lower()
+        if not email:
+            return jsonify({"error": "Email is required"}), 400
+
+        user = User.query.filter_by(email=email).first()
+        if user:
+            # Generate a secure token
+            token = secrets.token_urlsafe(48)
+            expires_at = datetime.utcnow() + timedelta(hours=1)
+            reset_token = PasswordResetToken(user_id=user.id, token=token, expires_at=expires_at)
+            db.session.add(reset_token)
+            db.session.commit()
+            # Build reset link using environment variable or default to production URL
+            frontend_url = os.environ.get('FRONTEND_URL', 'https://monstager.xyz')
+            reset_link = f"{frontend_url}/reset-password?token={token}"
+            subject = "Password Reset Request"
+            body = f"Hello {user.username},\n\nTo reset your password, click the link below (valid for 1 hour):\n{reset_link}\n\nIf you did not request this, you can ignore this email."
+            try:
+                send_email(user.email, subject, body)
+            except Exception as e:
+                # Log the error but don't fail the request (security: don't reveal if email failed)
+                print(f"Failed to send password reset email: {e}")
+                import traceback
+                traceback.print_exc()
+                # Continue anyway to avoid leaking information about email delivery status
+        # Always return success to avoid leaking user existence
+        return jsonify({"message": "If an account with that email exists, a password reset link has been sent."}), 200
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
 
 @app.route('/auth/reset-password', methods=['POST'])
 @limiter.limit("3 per minute")
 def reset_password():
     try:
-        data = request.get_json(force=True)
-    except Exception:
-        return jsonify({"error": "Invalid JSON"}), 400
+        try:
+            data = request.get_json(force=True)
+        except Exception:
+            return jsonify({"error": "Invalid JSON"}), 400
 
-    token = data.get('token', '').strip()
-    new_password = data.get('password', '')
+        token = data.get('token', '').strip()
+        new_password = data.get('password', '')
 
-    if not token or not new_password:
-        return jsonify({"error": "Token and new password are required"}), 400
+        if not token or not new_password:
+            return jsonify({"error": "Token and new password are required"}), 400
 
-    reset_token = PasswordResetToken.query.filter_by(token=token, used=False).first()
-    if not reset_token:
-        return jsonify({"error": "Invalid or expired token"}), 400
-    if reset_token.expires_at < datetime.utcnow():
-        return jsonify({"error": "Token has expired"}), 400
+        # Validate password strength
+        from .auth import validate_password
+        if not validate_password(new_password):
+            return jsonify({"error": "Password must be at least 12 characters long and include lowercase, uppercase, digit, and special character"}), 400
 
-    user = User.query.get(reset_token.user_id)
-    if not user:
-        return jsonify({"error": "User not found"}), 404
+        reset_token = PasswordResetToken.query.filter_by(token=token, used=False).first()
+        if not reset_token:
+            return jsonify({"error": "Invalid or expired token"}), 400
+        if reset_token.expires_at < datetime.utcnow():
+            return jsonify({"error": "Token has expired"}), 400
 
-    # Update password
-    from .auth import hash_password
-    user.password_hash = hash_password(new_password)
-    reset_token.used = True
-    db.session.commit()
-    return jsonify({"message": "Password has been reset successfully."}), 200
+        user = User.query.get(reset_token.user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        # Update password
+        from .auth import hash_password
+        user.password_hash = hash_password(new_password)
+        reset_token.used = True
+        db.session.commit()
+        return jsonify({"message": "Password has been reset successfully."}), 200
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
 
 # Refresh token endpoint
 @app.route('/auth/refresh', methods=['POST'])
