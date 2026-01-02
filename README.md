@@ -2,11 +2,9 @@
 
 A full-stack, gamified task management application built with React and Flask, featuring user authentication, offline support, and monster battle mechanics. Deployed with HTTPS, custom domains, and production-grade infrastructure.
 
-## Live/Video Demo
+## Liveo Demo
 
 - **Frontend:** [https://monstager.xyz](https://monstager.xyz)
-
-https://github.com/carterantrobus/Task-Manager/blob/main/frontend/public/assets/Task-Manager-Demo.mp4
 
 ## Features
 
