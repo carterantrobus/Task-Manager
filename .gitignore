@@ -18,3 +18,9 @@ __pycache__/
 *.log
 nohup.out*
 *.db
+
+# Large media files
+*.mp4
+*.mov
+*.avi
+frontend/public/assets/*.mp4
