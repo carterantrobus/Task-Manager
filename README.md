@@ -2,7 +2,7 @@
 
 A full-stack, gamified task management application built with React and Flask, featuring user authentication, offline support, and monster battle mechanics. Deployed with HTTPS, custom domains, and production-grade infrastructure.
 
-## Live/Video Demo
+## Liveo/Video Demo
 
 - **Frontend:** [https://monstager.xyz](https://monstager.xyz)
 
@@ -59,14 +59,14 @@ A full-stack, gamified task management application built with React and Flask, f
 ## Deployment Architecture
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Frontend      │    │   Backend       │    │   Database      │
-│                 │    │                 │    │                 │
-│ Netlify CDN     │◄──►│ Nginx + Gunicorn│◄──►│ SQLite/PostgreSQL│
-│ monstager.xyz   │    │ api.monstager.xyz│   │                 │
-│                 │    │                 │    │                 │
-│ React App       │    │ Flask API       │    │ User Data       │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
+┌─────────────────┐    ┌─────────────────-┐    ┌─────────────────-┐
+│   Frontend      │    │   Backend        │    │   Database       │
+│                 │    │                  │    │                  │
+│ Netlify CDN     │◄──►│ Nginx + Gunicorn │◄──►│ SQLite/PostgreSQL│
+│ monstager.xyz   │    │ api.monstager.xyz│    │                  │
+│                 │    │                  │    │                  │
+│ React App       │    │ Flask API        │    │ User Data        │
+└─────────────────┘    └─────────────────-┘    └─────────────────-┘
 ```
 
 ## Installation & Setup
