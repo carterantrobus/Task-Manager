@@ -2,9 +2,7 @@
 
 A full-stack, gamified task management application built with React and Flask, featuring user authentication, offline support, and monster battle mechanics. Deployed with HTTPS, custom domains, and production-grade infrastructure.
 
-## Live/Video Demo
-
-- **Frontend:** [https://monstager.xyz](https://monstager.xyz)
+## Video Demo
 
 https://github.com/user-attachments/assets/21353d14-5265-4043-b0e7-833708cc78ee
 
@@ -45,7 +43,7 @@ https://github.com/user-attachments/assets/21353d14-5265-4043-b0e7-833708cc78ee
 - **SQLite** - Development (with PostgreSQL support for production)
 - **Alembic** - Database migrations
 
-### Infrastructure
+### Infrastructure (Currently under construction)
 - **AWS EC2** - Cloud server hosting
 - **Nginx** - Reverse proxy and SSL termination
 - **Let's Encrypt** - Free SSL certificates
